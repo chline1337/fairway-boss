@@ -5,14 +5,14 @@ const Login = ({ setToken, setUserId }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [isRegistering, setIsRegistering] = useState(false);
-    const [email, setEmail] = useState(''); // For register
+    const [email, setEmail] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         const endpoint = isRegistering ? '/register' : '/login';
         const payload = isRegistering ? { username, password, email } : { username, password };
         try {
-            const res = await axios.post(`http://localhost:5000${endpoint}`, payload);
+            const res = await axios.post(endpoint, payload); // Relative path
             setToken(res.data.token);
             setUserId(res.data.userId);
             localStorage.setItem('token', res.data.token);

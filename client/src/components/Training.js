@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const Training = ({ player, setPlayer, addAlert }) => {
     const train = (stat) => {
-        axios.post('http://localhost:5000/train', { stat }, {
+        axios.post('/train', { stat }, { // Relative path
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
             .then(res => {

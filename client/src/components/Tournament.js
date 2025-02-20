@@ -5,7 +5,7 @@ const Tournament = ({ player, setPlayer, setResults, addAlert }) => {
     const [tournamentPreview, setTournamentPreview] = useState(null);
 
     useEffect(() => {
-        axios.get('http://localhost:5000/tournament', {
+        axios.get('/tournament', { // Relative path
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
             .then(res => setTournamentPreview(res.data))
@@ -14,7 +14,7 @@ const Tournament = ({ player, setPlayer, setResults, addAlert }) => {
 
     const play = (tactic) => {
         if (!tournamentPreview) return;
-        axios.post('http://localhost:5000/tournament', {
+        axios.post('/tournament', { // Relative path
             tactic,
             courseName: tournamentPreview.course,
             weatherName: tournamentPreview.weather

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const Settings = ({ player, setPlayer, addAlert, setToken }) => { // Add setToken prop
+const Settings = ({ player, setPlayer, addAlert, setToken }) => {
     const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') === 'true');
     const [difficulty, setDifficulty] = useState(localStorage.getItem('difficulty') || 50);
     const [muteSound, setMuteSound] = useState(localStorage.getItem('muteSound') === 'true');
@@ -15,7 +15,7 @@ const Settings = ({ player, setPlayer, addAlert, setToken }) => { // Add setToke
     }, [darkMode, difficulty, muteSound]);
 
     const handleNameChange = () => {
-        axios.post('http://localhost:5000/update-name', { name: newName }, {
+        axios.post('/update-name', { name: newName }, { // Relative path
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
             .then(res => {
@@ -30,7 +30,7 @@ const Settings = ({ player, setPlayer, addAlert, setToken }) => { // Add setToke
 
     const handleReset = () => {
         if (window.confirm('Are you sure you want to reset all progress?')) {
-            axios.post('http://localhost:5000/reset', {}, {
+            axios.post('/reset', {}, { // Relative path
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             })
                 .then(res => {
@@ -46,14 +46,14 @@ const Settings = ({ player, setPlayer, addAlert, setToken }) => { // Add setToke
     };
 
     const handleLogout = () => {
-        axios.post('http://localhost:5000/logout', {}, {
+        axios.post('/logout', {}, { // Relative path
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
             .then(() => {
                 localStorage.removeItem('token');
                 localStorage.removeItem('userId');
-                setToken(null); // Clear token state
-                setPlayer(null); // Clear player state
+                setToken(null);
+                setPlayer(null);
                 addAlert('Logged out successfully!', 'success');
             })
             .catch(err => {

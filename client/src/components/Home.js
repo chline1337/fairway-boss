@@ -1,11 +1,9 @@
-import React, { useEffect } from 'react'; // Removed useState
+import React, { useEffect } from 'react';
 import axios from 'axios';
 
 const Home = ({ player, setPlayer, addAlert }) => {
-    // Removed unused levelUpStat state
-
     const sell = (item) => {
-        axios.post('http://localhost:5000/sell', { item }, {
+        axios.post('/sell', { item }, { // Relative path
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
             .then(res => {
@@ -21,7 +19,7 @@ const Home = ({ player, setPlayer, addAlert }) => {
 
     const loadItems = () => JSON.parse(localStorage.getItem('items') || '{}');
     useEffect(() => {
-        axios.get('http://localhost:5000/items', {
+        axios.get('/items', { // Relative path
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
             .then(res =>
@@ -44,7 +42,7 @@ const Home = ({ player, setPlayer, addAlert }) => {
     const canLevelUp = player.xp >= getXpForLevel(player.level + 1);
 
     const handleLevelUp = (stat) => {
-        axios.post('http://localhost:5000/level-up', { stat }, {
+        axios.post('/level-up', { stat }, { // Relative path
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
             .then(res => {
@@ -58,8 +56,6 @@ const Home = ({ player, setPlayer, addAlert }) => {
     };
 
     if (!player) return <div>Loading profile...</div>;
-
-// Rest of the file remains unchanged...
 
     return (
         <div className="home">

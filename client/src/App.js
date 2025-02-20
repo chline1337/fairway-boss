@@ -17,12 +17,12 @@ const App = () => {
     const [activeTab, setActiveTab] = useState('training');
     const [alerts, setAlerts] = useState([]);
     const [token, setToken] = useState(localStorage.getItem('token') || null);
-    const [, setUserId] = useState(localStorage.getItem('userId') || null); // Keep setUserId, ditch userId
+    const [, setUserId] = useState(localStorage.getItem('userId') || null);
     let alertIdCounter = 0;
 
     useEffect(() => {
         if (token) {
-            axios.get('http://localhost:5000/player', {
+            axios.get('/player', { // Relative path
                 headers: { Authorization: `Bearer ${token}` }
             })
                 .then(res => setPlayer(res.data))
@@ -69,8 +69,6 @@ const App = () => {
                 return null;
         }
     };
-
-// Rest of the file unchanged...
 
     return (
         <div className="app">
