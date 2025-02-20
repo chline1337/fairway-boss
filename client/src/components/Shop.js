@@ -6,7 +6,7 @@ const Shop = ({ player, setPlayer, addAlert }) => {
     const [filter, setFilter] = useState('All');
 
     useEffect(() => {
-        axios.get('/items', { // Relative path
+        axios.get(`${process.env.REACT_APP_API_URL}/items`, { // Dynamic URL
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
             .then(res => setItems(res.data))
@@ -15,7 +15,7 @@ const Shop = ({ player, setPlayer, addAlert }) => {
 
     const buy = (item) => {
         console.log('Sending buy request for:', item);
-        axios.post('/buy', { item }, { // Relative path
+        axios.post(`${process.env.REACT_APP_API_URL}/buy`, { item }, { // Dynamic URL
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
             .then(res => {

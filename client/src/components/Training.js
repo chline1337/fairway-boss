@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const Training = ({ player, setPlayer, addAlert }) => {
     const train = (stat) => {
-        axios.post('/train', { stat }, { // Relative path
+        axios.post(`${process.env.REACT_APP_API_URL}/train`, { stat }, { // Dynamic URL
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
             .then(res => {
