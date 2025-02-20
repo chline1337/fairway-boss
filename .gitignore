@@ -1,0 +1,31 @@
+# Visual Studio
+.vs/
+.vscode/
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build Outputs
+client/build/
+dist/
+
+# SQLite Database
+server/data/fairwayboss.db
+
+# Vercel
+.vercel/
+vercel.json.bak
+
+# OS-specific (Windows)
+Thumbs.db
+Desktop.ini
+
+# Logs and Temp Files
+*.log
+*.tmp
+
+# Dependencies Lock (optional - include if you want to commit them)
+# package-lock.json
+# yarn.lock

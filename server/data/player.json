@@ -1,0 +1,122 @@
+{
+  "name": "Rookie",
+  "stats": {
+    "driving": 62,
+    "irons": 50,
+    "putting": 45,
+    "mental": 55
+  },
+  "cash": 50000,
+  "equipment": [],
+  "week": 1,
+  "earnings": 0,
+  "wins": 0,
+  "xp": 11,
+  "level": 1,
+  "milestones": [
+    {
+      "id": "wins_5",
+      "name": "Win 5 Tournaments",
+      "target": 5,
+      "progress": 0,
+      "reward": {
+        "cash": 10000
+      },
+      "completed": false
+    },
+    {
+      "id": "level_10",
+      "name": "Reach Level 10",
+      "target": 10,
+      "progress": 1,
+      "reward": {
+        "xp": 500
+      },
+      "completed": false
+    },
+    {
+      "id": "earnings_100k",
+      "name": "Earn $100,000",
+      "target": 100000,
+      "progress": 0,
+      "reward": {
+        "cash": 20000
+      },
+      "completed": false
+    },
+    {
+      "id": "train_50",
+      "name": "Train 50 Times",
+      "target": 50,
+      "progress": 0,
+      "reward": {
+        "xp": 300
+      },
+      "completed": false
+    },
+    {
+      "id": "items_10",
+      "name": "Buy 10 Items",
+      "target": 10,
+      "progress": 0,
+      "reward": {
+        "cash": 15000
+      },
+      "completed": false
+    },
+    {
+      "id": "tournaments_20",
+      "name": "Play 20 Tournaments",
+      "target": 20,
+      "progress": 0,
+      "reward": {
+        "xp": 1000
+      },
+      "completed": false
+    },
+    {
+      "id": "sell_5",
+      "name": "Sell 5 Items",
+      "target": 5,
+      "progress": 0,
+      "reward": {
+        "cash": 5000
+      },
+      "completed": false
+    },
+    {
+      "id": "cash_50k",
+      "name": "Spend $50,000",
+      "target": 50000,
+      "progress": 0,
+      "reward": {
+        "xp": 200
+      },
+      "completed": false
+    },
+    {
+      "id": "wins_10",
+      "name": "Win 10 Tournaments",
+      "target": 10,
+      "progress": 0,
+      "reward": {
+        "cash": 25000
+      },
+      "completed": false
+    },
+    {
+      "id": "level_20",
+      "name": "Reach Level 20",
+      "target": 20,
+      "progress": 1,
+      "reward": {
+        "xp": 1000
+      },
+      "completed": false
+    }
+  ],
+  "itemsBought": 0,
+  "tournamentsPlayed": 0,
+  "itemsSold": 0,
+  "cashSpent": 0
+}

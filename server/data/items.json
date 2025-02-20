@@ -1,0 +1,132 @@
+{
+  "TaylorMade Stealth 2 Driver": {
+    "cost": 25000,
+    "stat": "driving",
+    "boost": 7,
+    "category": "driver"
+  },
+  "Callaway Rogue ST Fairway Wood": {
+    "cost": 18000,
+    "stat": "driving",
+    "boost": 5,
+    "category": "fairway"
+  },
+  "Titleist T100 Irons": {
+    "cost": 30000,
+    "stat": "irons",
+    "boost": 8,
+    "category": "irons"
+  },
+  "Mizuno JPX 923 Hot Metal Irons": {
+    "cost": 22000,
+    "stat": "irons",
+    "boost": 6,
+    "category": "irons"
+  },
+  "Scotty Cameron Phantom X Putter": {
+    "cost": 20000,
+    "stat": "putting",
+    "boost": 7,
+    "category": "putter"
+  },
+  "Odyssey White Hot OG Putter": {
+    "cost": 15000,
+    "stat": "putting",
+    "boost": 5,
+    "category": "putter"
+  },
+  "Golf Pride MCC Grips": {
+    "cost": 5000,
+    "stat": "mental",
+    "boost": 3,
+    "category": "grips"
+  },
+  "Titleist Pro V1 Golf Balls": {
+    "cost": 8000,
+    "stats": {
+      "driving": 3,
+      "putting": 2
+    },
+    "category": "balls"
+  },
+  "Bridgestone Tour B XS Golf Balls": {
+    "cost": 7000,
+    "stats": {
+      "irons": 3,
+      "putting": 2
+    },
+    "category": "balls"
+  },
+  "Cobra Golf Bag": {
+    "cost": 10000,
+    "stat": "mental",
+    "boost": 4,
+    "category": "bag"
+  },
+  "FootJoy ProDry Shoes": {
+    "cost": 12000,
+    "stat": "mental",
+    "boost": 5,
+    "category": "shoes"
+  },
+  "Garmin Approach S62 Watch": {
+    "cost": 15000,
+    "stats": {
+      "irons": 4,
+      "mental": 2
+    },
+    "category": "watch"
+  },
+  "Bushnell Tour V6 Rangefinder": {
+    "cost": 18000,
+    "stat": "irons",
+    "boost": 6,
+    "category": "rangefinder"
+  },
+  "TrackMan 4 Launch Monitor": {
+    "cost": 40000,
+    "stats": {
+      "driving": 5,
+      "irons": 5
+    },
+    "category": "monitor"
+  },
+  "Swing Speed Trainer": {
+    "cost": 6000,
+    "stat": "driving",
+    "boost": 4,
+    "category": "trainer"
+  },
+  "Putting Alignment Mirror": {
+    "cost": 4000,
+    "stat": "putting",
+    "boost": 3,
+    "category": "mirror"
+  },
+  "Mental Game Coaching Session": {
+    "cost": 9000,
+    "stat": "mental",
+    "boost": 6,
+    "category": "coaching"
+  },
+  "Rain Gear Set": {
+    "cost": 11000,
+    "stat": "mental",
+    "boost": 4,
+    "category": "raingear"
+  },
+  "Callaway Chrome Soft Practice Balls": {
+    "cost": 3000,
+    "stat": "putting",
+    "boost": 2,
+    "category": "practice"
+  },
+  "Golf Fitness Program": {
+    "cost": 14000,
+    "stats": {
+      "driving": 3,
+      "mental": 3
+    },
+    "category": "fitness"
+  }
+}
