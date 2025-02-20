@@ -9,10 +9,10 @@ const Login = ({ setToken, setUserId }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const endpoint = isRegistering ? '/register' : '/login';
+        const endpoint = isRegistering ? '/register' : '/login'; // Relative path
         const payload = isRegistering ? { username, password, email } : { username, password };
         try {
-            const res = await axios.post(`${process.env.REACT_APP_API_URL}${endpoint}`, payload); // Dynamic URL
+            const res = await axios.post(endpoint, payload);
             setToken(res.data.token);
             setUserId(res.data.userId);
             localStorage.setItem('token', res.data.token);

@@ -22,7 +22,7 @@ const App = () => {
 
     useEffect(() => {
         if (token) {
-            axios.get(`${process.env.REACT_APP_API_URL}/player`, { // Dynamic URL
+            axios.get('/player', { // Relative path
                 headers: { Authorization: `Bearer ${token}` }
             })
                 .then(res => setPlayer(res.data))

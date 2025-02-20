@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const Home = ({ player, setPlayer, addAlert }) => {
     const sell = (item) => {
-        axios.post(`${process.env.REACT_APP_API_URL}/sell`, { item }, { // Dynamic URL
+        axios.post('/sell', { item }, { // Relative path
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
             .then(res => {
@@ -19,7 +19,7 @@ const Home = ({ player, setPlayer, addAlert }) => {
 
     const loadItems = () => JSON.parse(localStorage.getItem('items') || '{}');
     useEffect(() => {
-        axios.get(`${process.env.REACT_APP_API_URL}/items`, { // Dynamic URL
+        axios.get('/items', { // Relative path
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
             .then(res =>
@@ -42,7 +42,7 @@ const Home = ({ player, setPlayer, addAlert }) => {
     const canLevelUp = player.xp >= getXpForLevel(player.level + 1);
 
     const handleLevelUp = (stat) => {
-        axios.post(`${process.env.REACT_APP_API_URL}/level-up`, { stat }, { // Dynamic URL
+        axios.post('/level-up', { stat }, { // Relative path
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
             .then(res => {

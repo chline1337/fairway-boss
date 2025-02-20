@@ -15,7 +15,7 @@ const Settings = ({ player, setPlayer, addAlert, setToken }) => {
     }, [darkMode, difficulty, muteSound]);
 
     const handleNameChange = () => {
-        axios.post(`${process.env.REACT_APP_API_URL}/update-name`, { name: newName }, { // Dynamic URL
+        axios.post('/update-name', { name: newName }, { // Relative path
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
             .then(res => {
@@ -30,7 +30,7 @@ const Settings = ({ player, setPlayer, addAlert, setToken }) => {
 
     const handleReset = () => {
         if (window.confirm('Are you sure you want to reset all progress?')) {
-            axios.post(`${process.env.REACT_APP_API_URL}/reset`, {}, { // Dynamic URL
+            axios.post('/reset', {}, { // Relative path
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             })
                 .then(res => {
@@ -46,7 +46,7 @@ const Settings = ({ player, setPlayer, addAlert, setToken }) => {
     };
 
     const handleLogout = () => {
-        axios.post(`${process.env.REACT_APP_API_URL}/logout`, {}, { // Dynamic URL
+        axios.post('/logout', {}, { // Relative path
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
             .then(() => {
