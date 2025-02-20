@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react'; // Removed useState
 import axios from 'axios';
 
 const Home = ({ player, setPlayer, addAlert }) => {
-    const [levelUpStat, setLevelUpStat] = useState(null);
+    // Removed unused levelUpStat state
 
     const sell = (item) => {
         axios.post('http://localhost:5000/sell', { item }, {
@@ -27,7 +27,7 @@ const Home = ({ player, setPlayer, addAlert }) => {
             .then(res =>
                 localStorage.setItem('items', JSON.stringify(Object.fromEntries(res.data.map(i => [i.name, i]))))
             )
-            .catch(err => console.error('Failed to fetch items for local storage:', err.response?.data || err.message));
+            .catch(err => console.error('Failed to fetch items:', err.response?.data || err.message));
 
         if (player && player.milestones) {
             player.milestones.forEach(m => {
@@ -50,7 +50,6 @@ const Home = ({ player, setPlayer, addAlert }) => {
             .then(res => {
                 setPlayer(res.data);
                 addAlert(`Leveled up to ${res.data.level}! ${stat.charAt(0).toUpperCase() + stat.slice(1)} +2`, 'success');
-                setLevelUpStat(null);
             })
             .catch(err => {
                 console.error('Level-up failed:', err.response?.data || err.message);
@@ -59,6 +58,8 @@ const Home = ({ player, setPlayer, addAlert }) => {
     };
 
     if (!player) return <div>Loading profile...</div>;
+
+// Rest of the file remains unchanged...
 
     return (
         <div className="home">

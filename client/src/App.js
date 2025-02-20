@@ -17,7 +17,7 @@ const App = () => {
     const [activeTab, setActiveTab] = useState('training');
     const [alerts, setAlerts] = useState([]);
     const [token, setToken] = useState(localStorage.getItem('token') || null);
-    const [userId, setUserId] = useState(localStorage.getItem('userId') || null);
+    const [, setUserId] = useState(localStorage.getItem('userId') || null); // Keep setUserId, ditch userId
     let alertIdCounter = 0;
 
     useEffect(() => {
@@ -28,7 +28,7 @@ const App = () => {
                 .then(res => setPlayer(res.data))
                 .catch(err => {
                     console.error('Failed to fetch player:', err.response?.data || err.message);
-                    setToken(null); // Clear invalid token
+                    setToken(null);
                     localStorage.removeItem('token');
                     localStorage.removeItem('userId');
                 });
@@ -64,11 +64,13 @@ const App = () => {
             case 'leaderboard':
                 return <Leaderboard player={player} />;
             case 'settings':
-                return <Settings player={player} setPlayer={setPlayer} addAlert={addAlert} setToken={setToken} />; // Pass setToken
+                return <Settings player={player} setPlayer={setPlayer} addAlert={addAlert} setToken={setToken} />;
             default:
                 return null;
         }
     };
+
+// Rest of the file unchanged...
 
     return (
         <div className="app">
