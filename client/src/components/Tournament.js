@@ -11,23 +11,15 @@ const Tournament = ({ player, setPlayer, setResults, addAlert }) => {
             .then(res => setTournamentPreview(res.data))
             .catch(err => {
                 console.error('Failed to load tournament preview:', err.response?.data || err.message);
-                if (err.response?.status === 401) {
-                    addAlert('Session expired. Please log in again.', 'error');
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('userId');
-                    window.location.reload(); // Trigger App.js to show Login
-                } else {
-                    addAlert('Failed to load tournament preview.', 'error');
-                }
+                addAlert('Failed to load tournament preview.', 'error');
             });
-    }, [player.week, addAlert]);
+    }, [player.week, addAlert]); // Added addAlert to dependencies
 
     const play = (tactic) => {
         if (!tournamentPreview) {
             addAlert('No tournament preview available.', 'error');
             return;
         }
-        // Validate tactic
         if (!['aggressive', 'conservative', 'balanced'].includes(tactic)) {
             addAlert('Invalid tactic selected.', 'error');
             return;
@@ -43,9 +35,9 @@ const Tournament = ({ player, setPlayer, setResults, addAlert }) => {
             .then(res => {
                 setPlayer(res.data.player);
                 setResults(res.data);
-                const { place, prize, course } = res.data;
+                const { place, prize, course } = res.data; // Removed unused 'leaderboard'
                 if (place === 1) {
-                    addAlert(`You won the tournament at ${course}! +$${prize.toLocaleString()}`, 'success');
+                    addAlert(`You won the ${tournamentPreview.eventName} at ${course}! +$${prize.toLocaleString()}`, 'success');
                 } else {
                     addAlert(`Finished ${place}${getOrdinalSuffix(place)} at ${course}, earned $${prize.toLocaleString()}!`, 'neutral');
                 }
@@ -63,14 +55,7 @@ const Tournament = ({ player, setPlayer, setResults, addAlert }) => {
             })
             .catch(err => {
                 console.error('Tournament play failed:', err.response?.data || err.message);
-                if (err.response?.status === 401) {
-                    addAlert('Session expired. Please log in again.', 'error');
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('userId');
-                    window.location.reload();
-                } else {
-                    addAlert('Tournament play failed.', 'error');
-                }
+                addAlert('Tournament play failed.', 'error');
             });
     };
 
@@ -95,14 +80,14 @@ const Tournament = ({ player, setPlayer, setResults, addAlert }) => {
 
     return (
         <div className="tournament">
-            <h3>Tournament (Week {tournamentPreview.week})</h3>
+            <h3>{tournamentPreview.eventName} (Week {tournamentPreview.week})</h3>
             <p>Course: {tournamentPreview.course}</p>
             <p>Weather: {tournamentPreview.weather}</p>
             <p className="weather-effects">Effects: {getWeatherEffects(tournamentPreview.weather)}</p>
             <div className="button-group">
-                <button onClick={() => play('aggressive')}>Aggressive</button>
-                <button onClick={() => play('conservative')}>Conservative</button>
-                <button onClick={() => play('balanced')}>Balanced</button>
+                <button onClick={() => play('aggressive')}>Aggressive (-2)</button>
+                <button onClick={() => play('conservative')}>Conservative (+2)</button>
+                <button onClick={() => play('balanced')}>Balanced (0)</button>
             </div>
         </div>
     );

@@ -1,10 +1,19 @@
-// This file allows you to configure ESLint according to your project's needs, so that you
-// can control the strictness of the linter, the plugins to use, and more.
+version: '3.8'
+services:
+client:
+build: ./ client
+ports:
+- "3000:80"  # Host: Container
+depends_on:
+- server
+environment:
+- NODE_ENV=production
 
-// For more information about configuring ESLint, visit https://eslint.org/docs/user-guide/configuring/
-
-module.exports = [
-    {
-        rules: {}
-    }
-];
+server:
+build: ./ server
+ports:
+- "5000:5000"  # Host: Container
+volumes:
+- ./ server / data: /app/data  # Persist SQLite DB
+environment:
+- NODE_ENV=production

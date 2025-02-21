@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import Home from './components/Home';
@@ -18,25 +18,38 @@ const App = () => {
     const [alerts, setAlerts] = useState([]);
     const [token, setToken] = useState(localStorage.getItem('token') || null);
     const [, setUserId] = useState(localStorage.getItem('userId') || null);
-    let alertIdCounter = 0;
+
+    const addAlert = useCallback((message, type = 'success') => {
+        let alertIdCounter = 0; // Moved inside, reset each call
+        const id = `${Date.now()}-${alertIdCounter++}`;
+        setAlerts(prev => [...prev, { id, message, type }]);
+        setTimeout(() => {
+            setAlerts(prev => prev.filter(alert => alert.id !== id));
+        }, 3000);
+    }, []); // No dependencies needed
 
     useEffect(() => {
         if (token) {
+            const fetchPlayer = async () => {
+                try {
+                    const res = await axios.get('/player', {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    setPlayer(res.data);
+                } catch (err) {
+                    console.error('Failed to fetch player:', err.response?.data || err.message);
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('userId');
+                    setToken(null);
+                    setUserId(null);
+                    setPlayer(null);
+                    setActiveTab('training');
+                    addAlert('Logged out due to auth failure', 'error');
+                }
+            };
             fetchPlayer();
         }
-    }, [token]);
-
-    const fetchPlayer = async () => {
-        try {
-            const res = await axios.get('/player', {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setPlayer(res.data);
-        } catch (err) {
-            console.error('Failed to fetch player:', err.response?.data || err.message);
-            handleLogout(); // Clear token on auth failure
-        }
-    };
+    }, [token, addAlert]);
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -44,16 +57,8 @@ const App = () => {
         setToken(null);
         setUserId(null);
         setPlayer(null);
-        setActiveTab('training'); // Reset tab
+        setActiveTab('training');
         addAlert('Logged out successfully', 'success');
-    };
-
-    const addAlert = (message, type = 'success') => {
-        const id = `${Date.now()}-${alertIdCounter++}`;
-        setAlerts(prev => [...prev, { id, message, type }]);
-        setTimeout(() => {
-            setAlerts(prev => prev.filter(alert => alert.id !== id));
-        }, 3000);
     };
 
     if (!token) {
@@ -87,7 +92,7 @@ const App = () => {
                         setPlayer={setPlayer}
                         addAlert={addAlert}
                         setToken={setToken}
-                        handleLogout={handleLogout} // Pass logout to Settings
+                        handleLogout={handleLogout}
                     />
                 );
             default:
