@@ -16,62 +16,83 @@ const authMiddleware = (req, res, next) => {
     }
 };
 
-const getRandomCourse = async (db) => {
+const getTournamentOptions = async (db) => {
     const courses = await db.collection('courses').find().toArray();
-    return courses[Math.floor(Math.random() * courses.length)];
-};
-
-const getRandomWeather = async (db) => {
     const weatherConditions = await db.collection('weatherConditions').find().toArray();
-    return weatherConditions[Math.floor(Math.random() * weatherConditions.length)];
+    const events = await db.collection('events').find().toArray();
+    return {
+        courses: courses.map(c => c.name),
+        weatherConditions: weatherConditions.map(w => w.name),
+        events: events.map(e => e.name)
+    };
 };
 
-const getRandomEventName = () => {
-    const events = [
-        'Saudi International', 'LIV Golf Invitational', 'PGA Championship', 'Masters Tournament',
-        'Dubai Desert Classic', 'Players Championship', 'Genesis Invitational', 'Memorial Tournament'
-    ];
-    return events[Math.floor(Math.random() * events.length)];
-};
+const generateLeaderboard = async (db, playerScores, weather, course) => {
+    const aiPlayers = await db.collection('aiPlayers').find().toArray();
+    const par = 72;
+    const leaderboard = aiPlayers.map(ai => {
+        const scores = Array(4).fill(0).map(() => {
+            const baseAdjustment = Math.floor(Math.random() * 4) + 2;
+            const random = Math.floor(Math.random() * 11) - 5;
+            return par - baseAdjustment + weather.scoreMod + random;
+        });
+        return { name: ai.name, scores, total: scores.reduce((a, b) => a + b, 0) };
+    });
+    const playerEntry = { name: 'You', scores: playerScores, total: playerScores.reduce((a, b) => a + b, 0) };
+    leaderboard.push(playerEntry);
 
-const generateLeaderboard = (playerTotal, weather) => {
-    const aiPlayers = [
-        'Scottie Scheffler', 'Rory McIlroy', 'Jon Rahm', 'Brooks Koepka', 'Jordan Spieth',
-        'Justin Thomas', 'Xander Schauffele', 'Patrick Cantlay', 'Collin Morikawa', 'Viktor Hovland'
-    ];
-    const aiScores = aiPlayers.map(name => ({
-        name,
-        total: 270 - Math.floor(Math.random() * 21) + weather.scoreMod // 249-270 per round
+    // Sort by total, prioritizing "You" in ties
+    leaderboard.sort((a, b) => {
+        if (a.total === b.total) return a.name === 'You' ? -1 : 1;
+        return a.total - b.total;
+    });
+
+    // Assign explicit positions
+    return leaderboard.map((entry, index) => ({
+        ...entry,
+        position: index + 1
     }));
-    return [...aiScores, { name: 'You', total: playerTotal }].sort((a, b) => a.total - b.total);
 };
 
 module.exports = (app) => {
-    app.get('/tournament', authMiddleware, async (req, res) => {
+    app.get('/tournament/options', authMiddleware, async (req, res) => {
+        const db = app.locals.db;
         try {
-            const db = app.locals.db;
             const player = await loadPlayer(db, req.userId);
-            const course = await getRandomCourse(db);
-            const weather = await getRandomWeather(db);
-            const eventName = getRandomEventName();
-            res.json({ week: player.week, eventName, course: course.name, weather: weather.name });
+            const options = await getTournamentOptions(db);
+            res.json({ week: player.week, ...options });
         } catch (err) {
-            console.error('Error in GET /tournament:', err.message);
-            res.status(500).json({ error: 'Failed to load tournament preview' });
+            console.error('Error in GET /tournament/options:', err.message);
+            res.status(500).json({ error: 'Failed to load tournament options' });
+        }
+    });
+
+    app.get('/tournament/history', authMiddleware, async (req, res) => {
+        const db = app.locals.db;
+        try {
+            const history = await db.collection('tournaments')
+                .find({ userId: req.userId })
+                .sort({ completedAt: -1 })
+                .toArray();
+            res.json(history);
+        } catch (err) {
+            console.error('Error in GET /tournament/history:', err.message);
+            res.status(500).json({ error: 'Failed to load tournament history' });
         }
     });
 
     app.post('/tournament', authMiddleware, async (req, res) => {
+        const db = app.locals.db;
         try {
-            const db = app.locals.db;
             const player = await loadPlayer(db, req.userId);
-            const { tactic, courseName, weatherName } = req.body;
+            const { tactic, courseName, weatherName, eventName } = req.body;
 
             const course = await db.collection('courses').findOne({ name: courseName });
             const weather = await db.collection('weatherConditions').findOne({ name: weatherName });
+            const event = await db.collection('events').findOne({ name: eventName });
 
-            if (!course || !weather) {
-                return res.status(400).json({ error: 'Invalid course or weather' });
+            if (!course || !weather || !event) {
+                return res.status(400).json({ error: 'Invalid course, weather, or event name' });
             }
 
             const drivingMod = course.drivingMod + weather.statAdjust.driving;
@@ -89,22 +110,17 @@ module.exports = (app) => {
             const baseAdjustment = Math.round(baseScore / 100);
             const tacticMod = { aggressive: -2, conservative: 2, balanced: 0 }[tactic] + weather.tacticAdjust[tactic];
 
-            // Simulate 4 rounds
-            const scores = Array(4).fill(0).map((_, round) => {
+            const scores = Array(4).fill(0).map(() => {
                 const random = Math.floor(Math.random() * 11) - 5;
                 return par - baseAdjustment + tacticMod + weather.scoreMod + random;
             });
             const total = scores.reduce((a, b) => a + b, 0);
 
-            // Generate leaderboard with AI scores
-            const leaderboard = generateLeaderboard(total, weather);
-            const place = leaderboard.findIndex(p => p.name === 'You') + 1;
+            const leaderboard = await generateLeaderboard(db, scores, weather, course);
+            const place = leaderboard.find(p => p.name === 'You').position;
 
-            // LIV/PGA-inspired payouts (in-game millions)
-            const prizes = [
-                4000000, 2000000, 1200000, 800000, 600000, 400000, 300000, 200000, 150000, 100000
-            ];
-            const prize = prizes[place - 1] || 50000; // Minimum payout for lower ranks
+            const prizes = [4000000, 2000000, 1200000, 800000, 600000, 400000, 300000, 200000, 150000, 100000];
+            const prize = prizes[place - 1] || 50000;
 
             console.log('Player total:', total, 'Place:', place, 'Leaderboard:', leaderboard);
 
@@ -117,6 +133,22 @@ module.exports = (app) => {
             await checkMilestones(db, player);
             await savePlayer(db, player);
 
+            const tournament = {
+                userId: req.userId,
+                week: player.week - 1,
+                eventName,
+                courseName,
+                weatherName,
+                tactic,
+                rounds: leaderboard.map(p => ({ name: p.name, scores: p.scores })),
+                leaderboard,
+                place,
+                prize,
+                total,
+                completedAt: new Date()
+            };
+            await db.collection('tournaments').insertOne(tournament);
+
             res.json({
                 scores,
                 total,
@@ -125,6 +157,8 @@ module.exports = (app) => {
                 player,
                 course: course.name,
                 weather: weather.name,
+                eventName,
+                rounds: tournament.rounds,
                 leaderboard
             });
         } catch (err) {

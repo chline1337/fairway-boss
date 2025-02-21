@@ -1,6 +1,6 @@
 /* General Styles */
 .app {
-    max-width: 900px;
+    max-width: 1280px;
     margin: 0 auto;
     padding: 20px;
     font-family: 'Roboto', Arial, sans-serif;
@@ -48,7 +48,6 @@ h1 {
     overflow: hidden;
     text-overflow: ellipsis;
 }
-
 
 .cash {
     color: #4caf50;
@@ -167,21 +166,45 @@ h1 {
         gap: 8px;
     }
 
-        .equipment-list li i {
-            color: #4caf50;
-        }
-
-/* Training */
-.training h3, .tournament h3, .shop h3, .results h3, .leaderboard h3 {
+/* Tournament */
+.tournament h3, .results h3, .leaderboard h3 {
     color: #2e7d32;
     margin-bottom: 15px;
     font-weight: 700;
 }
 
+.rounds-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    margin-bottom: 20px; /* Space before leaderboard */
+}
+
+.rounds-column {
+    width: 48%;
+}
+
+.round-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
+    background: #f1f8e9;
+    border-radius: 5px;
+}
+
+    .round-table td {
+        padding: 8px;
+        border: 1px solid #ddd;
+        text-align: center;
+        color: #2e7d32;
+        font-weight: 600;
+    }
+
 .button-group {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
+    margin-bottom: 20px; /* Space before rounds/leaderboard */
 }
 
 button {
@@ -204,20 +227,6 @@ button {
         cursor: not-allowed;
     }
 
-/* Shop */
-.shop-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 15px;
-}
-
-.shop-item {
-    background: #f1f8e9;
-    padding: 10px;
-    border-radius: 5px;
-    text-align: center;
-}
-
 /* Leaderboard */
 .leaderboard-table {
     width: 100%;
@@ -227,6 +236,7 @@ button {
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-top: 20px; /* Ensure it stays below rounds */
 }
 
     .leaderboard-table th,
@@ -264,34 +274,22 @@ button {
         transition: background-color 0.3s ease;
     }
 
-.pagination {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    margin-top: 15px;
+/* Rest of your existing styles remain unchanged below */
+
+/* Shop */
+.shop-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
 }
 
-    .pagination button {
-        padding: 8px 12px;
-        background-color: #fff;
-        color: #2e7d32;
-        border: 1px solid #2e7d32;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        font-size: 14px;
-    }
+.shop-item {
+    background: #f1f8e9;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+}
 
-        .pagination button:hover:not(.active) {
-            background-color: #e8f5e9;
-        }
-
-        .pagination button.active {
-            background-color: #2e7d32;
-            color: white;
-            border-color: #2e7d32;
-            font-weight: 700;
-        }
 /* XP Bar */
 .xp-bar {
     width: 100%;
@@ -353,6 +351,14 @@ button {
         font-size: 14px;
         padding: 8px;
     }
+
+    .rounds-container {
+        flex-direction: column; /* Stack columns on small screens */
+    }
+
+    .rounds-column {
+        width: 100%; /* Full width on small screens */
+    }
 }
 
 .equipment-list li {
@@ -363,11 +369,11 @@ button {
     display: flex;
     align-items: center;
     gap: 8px;
-    justify-content: space-between; /* Space out item and button */
+    justify-content: space-between;
 }
 
 .sell-btn {
-    background-color: #d32f2f; /* Red for sell */
+    background-color: #d32f2f;
     padding: 5px 10px;
     font-size: 12px;
 }
@@ -397,38 +403,16 @@ button {
 }
 
     .alert.success {
-        background-color: #4caf50; /* Green */
+        background-color: #4caf50;
     }
 
     .alert.neutral {
-        background-color: #ffca28; /* Yellow */
+        background-color: #ffca28;
     }
 
     .alert.error {
-        background-color: #d32f2f; /* Red */
+        background-color: #d32f2f;
     }
-
-@keyframes fadeInOut {
-    0% {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-
-    20% {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-    80% {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-    100% {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-}
 
 @keyframes fadeInOut {
     0% {
@@ -652,59 +636,6 @@ input:checked + .slider {
     .reset-btn:hover {
         background-color: #b71c1c;
     }
-/* Toggle Switch */
-.switch {
-    position: relative;
-    display: inline-block;
-    width: 50px;
-    height: 24px;
-}
-
-    .switch input {
-        opacity: 0;
-        width: 0;
-        height: 0;
-    }
-
-.slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    transition: 0.4s;
-    border-radius: 24px;
-}
-
-    .slider:before {
-        position: absolute;
-        content: "";
-        height: 20px;
-        width: 20px;
-        left: 2px;
-        bottom: 2px;
-        background-color: white;
-        transition: 0.4s;
-        border-radius: 50%;
-    }
-
-input:checked + .slider {
-    background-color: #4caf50;
-}
-
-    input:checked + .slider:before {
-        transform: translateX(26px);
-    }
-
-.reset-btn {
-    background-color: #d32f2f;
-}
-
-    .reset-btn:hover {
-        background-color: #b71c1c;
-    }
 
 /* Dark Mode */
 body.dark-mode {
@@ -808,8 +739,8 @@ body.dark-mode {
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    background-color: #000; /* X's black background */
-    color: #fff; /* White text */
+    background-color: #000;
+    color: #fff;
 }
 
 .x-login-header {
@@ -837,16 +768,16 @@ body.dark-mode {
 
     .x-login-form input {
         padding: 12px 16px;
-        border: 1px solid #333; /* Dark gray border */
+        border: 1px solid #333;
         border-radius: 8px;
-        background: #1a1a1a; /* Slightly lighter black */
+        background: #1a1a1a;
         color: #fff;
         font-size: 16px;
         outline: none;
     }
 
         .x-login-form input::placeholder {
-            color: #888; /* Gray placeholder text */
+            color: #888;
         }
 
         .x-login-form input:focus {
@@ -856,8 +787,8 @@ body.dark-mode {
 
 .x-login-btn {
     padding: 12px;
-    background: #fff; /* White button like X */
-    color: #000; /* Black text */
+    background: #fff;
+    color: #000;
     border: none;
     border-radius: 25px;
     font-weight: 700;
@@ -867,7 +798,7 @@ body.dark-mode {
 }
 
     .x-login-btn:hover {
-        background: #e6e6e6; /* Light gray hover */
+        background: #e6e6e6;
     }
 
 .x-login-toggle {
@@ -876,7 +807,7 @@ body.dark-mode {
 }
 
     .x-login-toggle p {
-        color: #888; /* Gray text */
+        color: #888;
         font-size: 14px;
     }
 
@@ -892,10 +823,11 @@ body.dark-mode {
 }
 
     .x-toggle-btn:hover {
-        color: #ccc; /* Light gray hover */
+        color: #ccc;
     }
+
 .logout-btn {
-    background-color: #d32f2f; /* Red to contrast reset */
+    background-color: #d32f2f;
     color: white;
     padding: 6px 12px;
     border: none;
@@ -907,3 +839,288 @@ body.dark-mode {
     .logout-btn:hover {
         background-color: #b71c1c;
     }
+
+/* Existing styles unchanged until Tournament section */
+
+/* Tournament */
+.tournament h3, .results h3, .leaderboard h3 {
+    color: #2e7d32;
+    margin-bottom: 15px;
+    font-weight: 700;
+}
+
+.tournament-setup {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.rounds-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.rounds-column {
+    width: 48%;
+}
+
+.round-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
+    background: #f1f8e9;
+    border-radius: 5px;
+}
+
+    .round-table td {
+        padding: 8px;
+        border: 1px solid #ddd;
+        text-align: center;
+        color: #2e7d32;
+        font-weight: 600;
+    }
+
+.button-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+button {
+    padding: 8px 16px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-family: 'Roboto', sans-serif;
+}
+
+    button:hover:not(:disabled) {
+        background-color: #388e3c;
+    }
+
+    button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+
+.start-button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #2e7d32;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+    .start-button:hover:not(:disabled) {
+        background-color: #1b5e20;
+    }
+
+/* Rest of your existing styles unchanged below */
+
+/* Existing styles unchanged until Tournament section */
+
+/* Existing styles unchanged until Tournament section */
+
+/* Existing styles unchanged until Tournament section */
+
+/* Tournament */
+/* Tournament */
+.tournament h3, .results h3, .leaderboard h3 {
+    color: #2e7d32;
+    margin-bottom: 15px;
+    font-weight: 700;
+}
+
+.tournament-setup {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.tournament-actions {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.current-tournament {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8faf8;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.round-leaderboards {
+    margin-top: 20px;
+}
+
+.rounds-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 25px;
+}
+
+.round-leaderboard {
+    width: 48%;
+}
+
+    .round-leaderboard h4 {
+        color: #2e7d32;
+        margin-bottom: 10px;
+        font-weight: 700;
+    }
+
+.rounds-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.round-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
+    background: #f1f8e9;
+    border-radius: 5px;
+}
+
+    .round-table td {
+        padding: 8px;
+        border: 1px solid #ddd;
+        text-align: center;
+        color: #2e7d32;
+        font-weight: 600;
+    }
+
+.button-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+button {
+    padding: 8px 16px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-family: 'Roboto', sans-serif;
+}
+
+    button:hover:not(:disabled) {
+        background-color: #388e3c;
+    }
+
+    button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+
+.start-button {
+    padding: 10px 20px;
+    background-color: #2e7d32;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+    .start-button:hover:not(:disabled) {
+        background-color: #1b5e20;
+    }
+
+.reset-button {
+    padding: 10px 20px;
+    background-color: #d32f2f;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+    .reset-button:hover:not(:disabled) {
+        background-color: #b71c1c;
+    }
+/* Rest of your existing styles unchanged below */
+/* Existing styles unchanged until Tournament History section */
+
+/* Tournament History */
+.tournament-history {
+    margin-top: 30px;
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-top: 15px;
+}
+
+    .history-table th,
+    .history-table td {
+        padding: 10px;
+        border: 1px solid #ddd;
+        text-align: center;
+    }
+
+    .history-table th {
+        background-color: #2e7d32;
+        color: white;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 14px;
+    }
+
+    .history-table tr:nth-child(even) {
+        background-color: #f8faf8;
+    }
+
+    .history-table tr:hover {
+        background-color: #e8f5e9;
+    }
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+    .pagination button {
+        padding: 8px 16px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+        .pagination button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background-color: #388e3c;
+        }
+
+    .pagination span {
+        font-size: 14px;
+        color: #2e7d32;
+        font-weight: 700;
+    }
+
+/* Rest of your existing styles unchanged below */

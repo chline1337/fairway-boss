@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import Home from './components/Home';
@@ -18,10 +18,10 @@ const App = () => {
     const [alerts, setAlerts] = useState([]);
     const [token, setToken] = useState(localStorage.getItem('token') || null);
     const [, setUserId] = useState(localStorage.getItem('userId') || null);
+    const alertIdCounter = useRef(0); // Persist counter across renders
 
     const addAlert = useCallback((message, type = 'success') => {
-        let alertIdCounter = 0; // Moved inside, reset each call
-        const id = `${Date.now()}-${alertIdCounter++}`;
+        const id = `${Date.now()}-${alertIdCounter.current++}`; // Unique ID with incrementing counter
         setAlerts(prev => [...prev, { id, message, type }]);
         setTimeout(() => {
             setAlerts(prev => prev.filter(alert => alert.id !== id));

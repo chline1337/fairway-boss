@@ -1,33 +1,20 @@
 import React, { useState, useEffect } from 'react';
-// import axios from 'axios'; // Removed since not used in static version
+import axios from 'axios';
 
-const Leaderboard = ({ player }) => {
+const Leaderboard = ({ player, addAlert }) => {
     const [leaderboard, setLeaderboard] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Static leaderboard data
-        const aiPlayers = {
-            'Scottie Scheffler': Math.floor(280 - Math.random() * 21),
-            'Rory McIlroy': Math.floor(280 - Math.random() * 21),
-            'Jon Rahm': Math.floor(280 - Math.random() * 21),
-            'Brooks Koepka': Math.floor(280 - Math.random() * 21),
-            'Jordan Spieth': Math.floor(280 - Math.random() * 21),
-            'Justin Thomas': Math.floor(280 - Math.random() * 21),
-            'Xander Schauffele': Math.floor(280 - Math.random() * 21),
-            'Patrick Cantlay': Math.floor(280 - Math.random() * 21),
-            'Collin Morikawa': Math.floor(280 - Math.random() * 21),
-            'Viktor Hovland': Math.floor(280 - Math.random() * 21)
-        };
-
-        // Optional: Fetch real leaderboard from backend (uncomment and add axios if used)
-        /*
-        axios.get('/leaderboard', {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        })
-            .then(res => {
-                setLeaderboard(res.data);
-            })
-            .catch(err => {
+        const fetchLeaderboard = async () => {
+            setIsLoading(true);
+            try {
+                const response = await axios.get('/leaderboard', {
+                    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+                });
+                console.log('Leaderboard data:', response.data); // Debug
+                setLeaderboard(response.data);
+            } catch (err) {
                 console.error('Failed to fetch leaderboard:', err.response?.data || err.message);
                 if (err.response?.status === 401) {
                     addAlert('Session expired. Please log in again.', 'error');
@@ -35,53 +22,48 @@ const Leaderboard = ({ player }) => {
                     localStorage.removeItem('userId');
                     window.location.reload();
                 } else {
-                    const scores = Object.entries(aiPlayers)
-                        .map(([name]) => ({ name, total: aiPlayers[name], wins: name === player.name ? player.wins : 'N/A' }))
-                        .sort((a, b) => a.total - b.total)
-                        .slice(0, 10);
-                    setLeaderboard(scores);
+                    setLeaderboard([]);
                 }
-            });
-        */
+            } finally {
+                setIsLoading(false);
+            }
+        };
 
-        // Static leaderboard (default behavior)
-        const scores = Object.entries(aiPlayers)
-            .map(([name]) => ({ name, total: aiPlayers[name], wins: name === player.name ? player.wins : 'N/A' }))
-            .sort((a, b) => a.total - b.total)
-            .slice(0, 10);
-        setLeaderboard(scores);
-    }, [player]); // Re-run if player changes (e.g., wins update)
+        fetchLeaderboard();
+    }, [addAlert]);
 
     return (
         <div className="leaderboard">
-            <h3>Leaderboard</h3>
-            {leaderboard.length === 0 ? (
+            <h3>Season Leaderboard</h3>
+            {isLoading ? (
                 <div>Loading leaderboard...</div>
+            ) : leaderboard.length === 0 ? (
+                <div>No leaderboard data available yet.</div>
             ) : (
                 <table className="leaderboard-table">
                     <thead>
                         <tr>
-                            <th>Place</th>
+                            <th>Rank</th>
                             <th>Name</th>
-                            <th>Total</th>
+                            <th>Points</th>
                             <th>Wins</th>
                         </tr>
                     </thead>
                     <tbody>
                         {leaderboard.map((golfer, index) => (
-                            <tr key={golfer.name} className={golfer.name === player.name ? 'highlight' : ''}>
+                            <tr key={golfer.name} className={golfer.name === 'You' ? 'highlight' : ''}>
                                 <td>{index + 1}</td>
                                 <td>{golfer.name}</td>
-                                <td>{golfer.total}</td>
+                                <td>{golfer.points}</td>
                                 <td>{golfer.wins}</td>
                             </tr>
                         ))}
-                        {leaderboard.every(g => g.name !== player.name) && (
+                        {leaderboard.every(g => g.name !== 'You') && (
                             <tr className="highlight">
                                 <td>N/A</td>
                                 <td>{player.name}</td>
-                                <td>N/A</td>
-                                <td>{player.wins}</td>
+                                <td>0</td>
+                                <td>{player.wins || 0}</td>
                             </tr>
                         )}
                     </tbody>
