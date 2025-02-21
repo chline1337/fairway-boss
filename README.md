@@ -25,24 +25,3 @@ Welcome to **Fairway Boss**, a golf simulation game where you train stats, buy g
 ```bash
 git clone https://github.com/chline1337/fairway-boss.git
 cd fairway-boss
-
-fairway-boss/
-├── client/           # React frontend
-│   ├── src/          # Components, App.js
-│   ├── package.json  # Frontend deps + proxy
-│   └── .gitignore    # Ignores node_modules, build
-├── server/           # Node.js/Express backend
-│   ├── routes/       # API endpoints
-│   ├── data/         # SQLite DB (fairwayboss.db)
-│   ├── index.js      # Server entry
-│   └── package.json  # Backend deps
-├── vercel.json       # Vercel config (builds, routes)
-└── README.md         # You’re reading it!
-
-### Instructions
-1. Copy the entire block above (from the first `# Fairway Boss` to the last `You’re the king!`).
-2. Open VS Code or any text editor, create a new file named `README.md`.
-3. Paste the content into `README.md`.
-4. Save it, then follow your commit and push steps to upload it to `https://github.com/chline1337/fairway-boss`.
-
-This includes everything—your project description, setup instructions, and the step-by-step guide—all in one file, ready to go! Let me know if you need any adjustments!
