@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { loadPlayer, savePlayer, getXpForLevel, checkMilestones } = require('./utils');
+const { loadPlayer, savePlayer, getXpForLevel, checkMilestones } = require('./utils'); // Correct path
 
 const SECRET_KEY = 'your-secret-key';
 
@@ -23,14 +23,13 @@ module.exports = (app) => {
             if (!['driving', 'irons', 'putting', 'mental'].includes(stat)) {
                 return res.status(400).json({ error: 'Invalid stat' });
             }
-
             const player = await loadPlayer(db, req.userId);
             const nextLevelXp = getXpForLevel(player.level + 1);
             if (player.xp >= nextLevelXp) {
                 player.level += 1;
                 player.stats[stat] += 2;
                 player.xp -= nextLevelXp;
-                checkMilestones(player);
+                await checkMilestones(db, player);
                 await savePlayer(db, player);
                 console.log(`Leveled up to ${player.level}, boosted ${stat}`);
             }

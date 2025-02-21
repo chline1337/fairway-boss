@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
-const { loadPlayer, savePlayer, checkMilestones } = require('./utils');
+const { loadPlayer, savePlayer, checkMilestones } = require('./utils'); // Correct path
 
-const SECRET_KEY = 'your-secret-key'; // Match auth.js
+const SECRET_KEY = 'your-secret-key';
 
 const authMiddleware = (req, res, next) => {
     const token = req.headers['authorization']?.split(' ')[1];
@@ -104,7 +104,7 @@ module.exports = (app) => {
             player.xp = (player.xp || 0) + Math.max(100 - (place - 1) * 10, 10);
             player.week += 1;
             player.tournamentsPlayed = (player.tournamentsPlayed || 0) + 1;
-            checkMilestones(player); // Pure JS
+            await checkMilestones(db, player);
             await savePlayer(db, player);
 
             res.json({ scores, total, place, prize, player, course: course.name, weather: weather.name });

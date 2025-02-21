@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
-const { loadPlayer, savePlayer, defaultPlayer, checkMilestones } = require('./utils');
+const { loadPlayer, savePlayer, defaultPlayer, checkMilestones } = require('./utils'); // Correct path
 
-const SECRET_KEY = 'your-secret-key'; // Match auth.js
+const SECRET_KEY = 'your-secret-key';
 
 const authMiddleware = (req, res, next) => {
     const token = req.headers['authorization']?.split(' ')[1];
@@ -24,7 +24,7 @@ module.exports = (app) => {
             console.log('Fetching player for userId:', req.userId);
             const player = await loadPlayer(db, req.userId);
             console.log('Player loaded:', player.name, 'with userId:', player.userId);
-            checkMilestones(player); // Pure JS, no DB needed
+            await checkMilestones(db, player);
             console.log('Milestones checked');
             await savePlayer(db, player);
             console.log('Player saved');

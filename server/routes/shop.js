@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
-const { loadPlayer, savePlayer, loadItems, checkMilestones } = require('./utils');
+const { loadPlayer, savePlayer, loadItems, checkMilestones } = require('./utils'); // Correct path
 
-const SECRET_KEY = 'your-secret-key'; // Match auth.js
+const SECRET_KEY = 'your-secret-key';
 
 const authMiddleware = (req, res, next) => {
     const token = req.headers['authorization']?.split(' ')[1];
@@ -17,10 +17,10 @@ const authMiddleware = (req, res, next) => {
 };
 
 module.exports = (app) => {
-    app.get('/items', (req, res) => {
+    app.get('/items', async (req, res) => {
         try {
             console.log('Fetching items...');
-            const items = loadItems(); // No DB needed—reads items.json
+            const items = await loadItems(app.locals.db);
             console.log('Items loaded:', Object.keys(items).length, 'items');
             const itemList = Object.keys(items).map(name => ({
                 name,
@@ -41,13 +41,13 @@ module.exports = (app) => {
         try {
             const db = app.locals.db;
             const player = await loadPlayer(db, req.userId);
-            const items = loadItems();
+            const items = await loadItems(db);
             const { item } = req.body;
             console.log('Buying item:', item);
             const itemData = items[item];
 
             if (!itemData) {
-                console.error('Item not found in items.json:', item);
+                console.error('Item not found in items:', item);
                 return res.status(400).json({ error: 'Invalid item' });
             }
 
@@ -71,7 +71,7 @@ module.exports = (app) => {
                     });
                 }
                 player.equipment.push(item);
-                checkMilestones(player); // Pure JS
+                await checkMilestones(db, player);
                 await savePlayer(db, player);
                 console.log('Purchase successful:', player);
             } else {
@@ -88,7 +88,7 @@ module.exports = (app) => {
         try {
             const db = app.locals.db;
             const player = await loadPlayer(db, req.userId);
-            const items = loadItems();
+            const items = await loadItems(db);
             const { item } = req.body;
             console.log('Selling item:', item);
 
@@ -112,11 +112,11 @@ module.exports = (app) => {
                 }
                 console.log('Sell successful:', player, 'Refund:', refund);
             } else {
-                console.log('Item not in items.json, removing without refund:', item);
+                console.log('Item not in items, removing without refund:', item);
             }
 
             player.equipment.splice(itemIndex, 1);
-            checkMilestones(player); // Pure JS
+            await checkMilestones(db, player);
             await savePlayer(db, player);
 
             res.json(player);

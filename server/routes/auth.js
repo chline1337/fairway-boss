@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-
-const SECRET_KEY = 'your-secret-key'; // Replace with env var in prod
+// Removed unused import: const { db } = require('../../utils');
+const SECRET_KEY = 'your-secret-key';
 
 module.exports = (app) => {
     app.post('/register', async (req, res) => {
@@ -11,13 +11,10 @@ module.exports = (app) => {
                 return res.status(400).json({ error: 'Username and password required' });
             }
             const db = app.locals.db;
-
-            // Check for existing user (optional with unique index, but keeps custom message)
             const existingUser = await db.collection('users').findOne({ username });
             if (existingUser) {
                 return res.status(400).json({ error: 'Username already taken' });
             }
-
             const hashedPassword = await bcrypt.hash(password, 10);
             const result = await db.collection('users').insertOne({
                 username,
@@ -30,7 +27,7 @@ module.exports = (app) => {
             res.json({ token, userId });
         } catch (err) {
             console.error('Error in /register:', err.message);
-            if (err.code === 11000) { // MongoDB duplicate key error
+            if (err.code === 11000) {
                 return res.status(400).json({ error: 'Username already taken' });
             }
             res.status(500).json({ error: 'Registration failed' });
@@ -62,6 +59,6 @@ module.exports = (app) => {
     });
 
     app.post('/logout', (req, res) => {
-        res.json({ message: 'Logged out' }); // Client clears token
+        res.json({ message: 'Logged out' });
     });
 };
