@@ -1,6 +1,5 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { db } = require('./utils');
 
 const SECRET_KEY = 'your-secret-key'; // Replace with env var in prod
 
@@ -11,29 +10,40 @@ module.exports = (app) => {
             if (!username || !password) {
                 return res.status(400).json({ error: 'Username and password required' });
             }
+            const db = app.locals.db;
+
+            // Check for existing user (optional with unique index, but keeps custom message)
+            const existingUser = await db.collection('users').findOne({ username });
+            if (existingUser) {
+                return res.status(400).json({ error: 'Username already taken' });
+            }
+
             const hashedPassword = await bcrypt.hash(password, 10);
-            db.run('INSERT INTO users (username, password, email) VALUES (?, ?, ?)',
-                [username, hashedPassword, email || null], function (err) {
-                    if (err) {
-                        console.error('Error registering user:', err.message);
-                        return res.status(500).json({ error: 'Registration failed—username might be taken' });
-                    }
-                    const userId = this.lastID;
-                    console.log('Registered user:', { username, userId });
-                    const token = jwt.sign({ userId }, SECRET_KEY, { expiresIn: '1h' });
-                    res.json({ token, userId });
-                });
+            const result = await db.collection('users').insertOne({
+                username,
+                password: hashedPassword,
+                email: email || null
+            });
+            const userId = result.insertedId;
+            console.log('Registered user:', { username, userId });
+            const token = jwt.sign({ userId }, SECRET_KEY, { expiresIn: '1h' });
+            res.json({ token, userId });
         } catch (err) {
             console.error('Error in /register:', err.message);
+            if (err.code === 11000) { // MongoDB duplicate key error
+                return res.status(400).json({ error: 'Username already taken' });
+            }
             res.status(500).json({ error: 'Registration failed' });
         }
     });
 
-    app.post('/login', (req, res) => {
-        const { username, password } = req.body;
-        db.get('SELECT * FROM users WHERE username = ?', [username], async (err, user) => {
-            if (err || !user) {
-                console.error('Login failed—no user:', err?.message || 'No user found');
+    app.post('/login', async (req, res) => {
+        try {
+            const { username, password } = req.body;
+            const db = app.locals.db;
+            const user = await db.collection('users').findOne({ username });
+            if (!user) {
+                console.error('Login failed—no user:', username);
                 return res.status(401).json({ error: 'Invalid credentials' });
             }
             const match = await bcrypt.compare(password, user.password);
@@ -41,10 +51,14 @@ module.exports = (app) => {
                 console.error('Login failed—wrong password for:', username);
                 return res.status(401).json({ error: 'Invalid credentials' });
             }
-            const token = jwt.sign({ userId: user.id }, SECRET_KEY, { expiresIn: '1h' });
-            console.log('Logged in user:', { username, userId: user.id });
-            res.json({ token, userId: user.id });
-        });
+            const userId = user._id;
+            const token = jwt.sign({ userId }, SECRET_KEY, { expiresIn: '1h' });
+            console.log('Logged in user:', { username, userId });
+            res.json({ token, userId });
+        } catch (err) {
+            console.error('Error in /login:', err.message);
+            res.status(500).json({ error: 'Login failed' });
+        }
     });
 
     app.post('/logout', (req, res) => {

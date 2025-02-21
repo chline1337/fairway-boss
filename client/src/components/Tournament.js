@@ -5,16 +5,35 @@ const Tournament = ({ player, setPlayer, setResults, addAlert }) => {
     const [tournamentPreview, setTournamentPreview] = useState(null);
 
     useEffect(() => {
-        axios.get('/tournament', { // Relative path
+        axios.get('/tournament', {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
             .then(res => setTournamentPreview(res.data))
-            .catch(err => console.error('Failed to load tournament preview:', err.response?.data || err.message));
-    }, [player.week]);
+            .catch(err => {
+                console.error('Failed to load tournament preview:', err.response?.data || err.message);
+                if (err.response?.status === 401) {
+                    addAlert('Session expired. Please log in again.', 'error');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('userId');
+                    window.location.reload(); // Trigger App.js to show Login
+                } else {
+                    addAlert('Failed to load tournament preview.', 'error');
+                }
+            });
+    }, [player.week, addAlert]);
 
     const play = (tactic) => {
-        if (!tournamentPreview) return;
-        axios.post('/tournament', { // Relative path
+        if (!tournamentPreview) {
+            addAlert('No tournament preview available.', 'error');
+            return;
+        }
+        // Validate tactic
+        if (!['aggressive', 'conservative', 'balanced'].includes(tactic)) {
+            addAlert('Invalid tactic selected.', 'error');
+            return;
+        }
+
+        axios.post('/tournament', {
             tactic,
             courseName: tournamentPreview.course,
             weatherName: tournamentPreview.weather
@@ -39,11 +58,19 @@ const Tournament = ({ player, setPlayer, setResults, addAlert }) => {
                         break;
                     default:
                         addAlert('Calm weather provided a neutral playing field.', 'neutral');
+                        break;
                 }
             })
             .catch(err => {
                 console.error('Tournament play failed:', err.response?.data || err.message);
-                addAlert('Tournament play failed.', 'error');
+                if (err.response?.status === 401) {
+                    addAlert('Session expired. Please log in again.', 'error');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('userId');
+                    window.location.reload();
+                } else {
+                    addAlert('Tournament play failed.', 'error');
+                }
             });
     };
 

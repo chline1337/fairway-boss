@@ -1,49 +1,5 @@
-const sqlite3 = require('sqlite3').verbose();
 const fs = require('fs');
 const path = require('path');
-const dbPath = path.join(__dirname, '../data', 'fairwayboss.db');
-
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error('Error opening database:', err.message);
-    } else {
-        console.log('Connected to SQLite database');
-        db.serialize(() => {
-            db.run(`CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL,
-        email TEXT
-      )`, (err) => {
-                if (err) console.error('Error creating users table:', err.message);
-                else console.log('Users table ready');
-            });
-
-            db.run(`CREATE TABLE IF NOT EXISTS players (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        userId INTEGER NOT NULL,
-        name TEXT NOT NULL,
-        stats TEXT NOT NULL,
-        cash INTEGER DEFAULT 50000,
-        equipment TEXT DEFAULT '[]',
-        week INTEGER DEFAULT 1,
-        earnings INTEGER DEFAULT 0,
-        wins INTEGER DEFAULT 0,
-        xp INTEGER DEFAULT 0,
-        level INTEGER DEFAULT 1,
-        milestones TEXT NOT NULL,
-        itemsBought INTEGER DEFAULT 0,
-        tournamentsPlayed INTEGER DEFAULT 0,
-        itemsSold INTEGER DEFAULT 0,
-        cashSpent INTEGER DEFAULT 0,
-        FOREIGN KEY (userId) REFERENCES users(id)
-      )`, (err) => {
-                if (err) console.error('Error creating players table:', err.message);
-                else console.log('Players table ready');
-            });
-        });
-    }
-});
 
 const defaultPlayer = {
     name: 'Rookie',
@@ -73,44 +29,36 @@ const defaultPlayer = {
     cashSpent: 0
 };
 
-const loadPlayer = (userId) => {
-    return new Promise((resolve, reject) => {
-        db.get('SELECT * FROM players WHERE userId = ?', [userId], (err, row) => {
-            if (err) return reject(err);
-            if (!row) {
-                const newPlayer = { ...defaultPlayer, userId };
-                db.run(`INSERT INTO players (userId, name, stats, cash, equipment, week, earnings, wins, xp, level, milestones, itemsBought, tournamentsPlayed, itemsSold, cashSpent)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                    [newPlayer.userId, newPlayer.name, JSON.stringify(newPlayer.stats), newPlayer.cash, JSON.stringify(newPlayer.equipment), newPlayer.week,
-                    newPlayer.earnings, newPlayer.wins, newPlayer.xp, newPlayer.level, JSON.stringify(newPlayer.milestones),
-                    newPlayer.itemsBought, newPlayer.tournamentsPlayed, newPlayer.itemsSold, newPlayer.cashSpent],
-                    function (err) {
-                        if (err) return reject(err);
-                        console.log('New player inserted for userId:', userId, 'with id:', this.lastID);
-                        resolve({ id: this.lastID, ...newPlayer });
-                    });
-            } else {
-                resolve({ ...row, stats: JSON.parse(row.stats), equipment: JSON.parse(row.equipment), milestones: JSON.parse(row.milestones) });
-            }
-        });
-    });
+const loadPlayer = async (db, userId) => {
+    if (!userId) throw new Error('No userId provided');
+    try {
+        const player = await db.collection('players').findOne({ userId });
+        if (!player) {
+            const newPlayer = { ...defaultPlayer, userId };
+            const result = await db.collection('players').insertOne(newPlayer);
+            console.log('New player inserted for userId:', userId, 'with id:', result.insertedId);
+            return { _id: result.insertedId, ...newPlayer };
+        }
+        return player;
+    } catch (err) {
+        console.error('Error loading player:', err.message);
+        throw err;
+    }
 };
 
-const savePlayer = (player) => {
-    return new Promise((resolve, reject) => {
-        db.run(`UPDATE players SET name = ?, stats = ?, cash = ?, equipment = ?, week = ?, earnings = ?, wins = ?, xp = ?, level = ?, milestones = ?, 
-            itemsBought = ?, tournamentsPlayed = ?, itemsSold = ?, cashSpent = ? WHERE id = ?`,
-            [player.name, JSON.stringify(player.stats), player.cash, JSON.stringify(player.equipment), player.week, player.earnings, player.wins, player.xp,
-            player.level, JSON.stringify(player.milestones), player.itemsBought, player.tournamentsPlayed, player.itemsSold, player.cashSpent, player.id],
-            (err) => {
-                if (err) {
-                    console.error('Error saving player:', err.message);
-                    reject(err);
-                } else {
-                    resolve(player);
-                }
-            });
-    });
+const savePlayer = async (db, player) => {
+    try {
+        const { _id, ...playerData } = player; // MongoDB uses _id
+        await db.collection('players').updateOne(
+            { _id },
+            { $set: playerData },
+            { upsert: true } // Fallback, though shouldn’t trigger
+        );
+        return player;
+    } catch (err) {
+        console.error('Error saving player:', err.message);
+        throw err;
+    }
 };
 
 const loadItems = () => {
@@ -173,4 +121,4 @@ const checkMilestones = (player) => {
     });
 };
 
-module.exports = { loadPlayer, savePlayer, loadItems, getXpForLevel, defaultPlayer, checkMilestones, db };
+module.exports = { loadPlayer, savePlayer, loadItems, getXpForLevel, defaultPlayer, checkMilestones };

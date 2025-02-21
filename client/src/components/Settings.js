@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const Settings = ({ player, setPlayer, addAlert, setToken }) => {
+const Settings = ({ player, setPlayer, addAlert, handleLogout }) => { // Replace setToken with handleLogout
     const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') === 'true');
     const [difficulty, setDifficulty] = useState(localStorage.getItem('difficulty') || 50);
     const [muteSound, setMuteSound] = useState(localStorage.getItem('muteSound') === 'true');
@@ -15,11 +15,12 @@ const Settings = ({ player, setPlayer, addAlert, setToken }) => {
     }, [darkMode, difficulty, muteSound]);
 
     const handleNameChange = () => {
-        axios.post('/update-name', { name: newName }, { // Relative path
+        axios.post('/update-name', { name: newName }, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
             .then(res => {
                 setPlayer(res.data);
+                setNewName(res.data.name); // Sync input with updated name
                 addAlert(`Username changed to ${res.data.name}!`, 'success');
             })
             .catch(err => {
@@ -30,7 +31,7 @@ const Settings = ({ player, setPlayer, addAlert, setToken }) => {
 
     const handleReset = () => {
         if (window.confirm('Are you sure you want to reset all progress?')) {
-            axios.post('/reset', {}, { // Relative path
+            axios.post('/reset', {}, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             })
                 .then(res => {
@@ -43,23 +44,6 @@ const Settings = ({ player, setPlayer, addAlert, setToken }) => {
                     addAlert('Reset failed.', 'error');
                 });
         }
-    };
-
-    const handleLogout = () => {
-        axios.post('/logout', {}, { // Relative path
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        })
-            .then(() => {
-                localStorage.removeItem('token');
-                localStorage.removeItem('userId');
-                setToken(null);
-                setPlayer(null);
-                addAlert('Logged out successfully!', 'success');
-            })
-            .catch(err => {
-                console.error('Logout failed:', err.response?.data || err.message);
-                addAlert('Logout failed.', 'error');
-            });
     };
 
     return (

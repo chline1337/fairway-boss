@@ -1,5 +1,5 @@
-const { loadPlayer, savePlayer, checkMilestones } = require('./utils');
 const jwt = require('jsonwebtoken');
+const { loadPlayer, savePlayer, checkMilestones } = require('./utils');
 
 const SECRET_KEY = 'your-secret-key'; // Match auth.js
 
@@ -11,6 +11,7 @@ const authMiddleware = (req, res, next) => {
         req.userId = decoded.userId;
         next();
     } catch (err) {
+        console.error('Invalid token:', err.message);
         res.status(401).json({ error: 'Invalid token' });
     }
 };
@@ -49,7 +50,8 @@ const getRandomWeather = () => weatherConditions[Math.floor(Math.random() * weat
 module.exports = (app) => {
     app.get('/tournament', authMiddleware, async (req, res) => {
         try {
-            const player = await loadPlayer(req.userId);
+            const db = app.locals.db;
+            const player = await loadPlayer(db, req.userId);
             const course = getRandomCourse();
             const weather = getRandomWeather();
             res.json({ week: player.week, course: course.name, weather: weather.name });
@@ -61,7 +63,8 @@ module.exports = (app) => {
 
     app.post('/tournament', authMiddleware, async (req, res) => {
         try {
-            const player = await loadPlayer(req.userId);
+            const db = app.locals.db;
+            const player = await loadPlayer(db, req.userId);
             const { tactic, courseName, weatherName } = req.body;
             const course = courses.find(c => c.name === courseName);
             const weather = weatherConditions.find(w => w.name === weatherName);
@@ -101,8 +104,8 @@ module.exports = (app) => {
             player.xp = (player.xp || 0) + Math.max(100 - (place - 1) * 10, 10);
             player.week += 1;
             player.tournamentsPlayed = (player.tournamentsPlayed || 0) + 1;
-            checkMilestones(player);
-            await savePlayer(player);
+            checkMilestones(player); // Pure JS
+            await savePlayer(db, player);
 
             res.json({ scores, total, place, prize, player, course: course.name, weather: weather.name });
         } catch (err) {

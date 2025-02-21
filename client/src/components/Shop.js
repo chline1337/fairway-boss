@@ -6,25 +6,43 @@ const Shop = ({ player, setPlayer, addAlert }) => {
     const [filter, setFilter] = useState('All');
 
     useEffect(() => {
-        axios.get('/items', { // Relative path
+        axios.get('/items', {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
             .then(res => setItems(res.data))
-            .catch(err => console.error('Failed to load items:', err.response?.data || err.message));
-    }, []);
+            .catch(err => {
+                console.error('Failed to load items:', err.response?.data || err.message);
+                if (err.response?.status === 401) {
+                    addAlert('Session expired. Please log in again.', 'error');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('userId');
+                    window.location.reload(); // Trigger App.js to show Login
+                } else {
+                    addAlert('Failed to load shop items.', 'error');
+                }
+            });
+    }, [addAlert]);
 
     const buy = (item) => {
         console.log('Sending buy request for:', item);
-        axios.post('/buy', { item }, { // Relative path
+        axios.post('/buy', { item }, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
             .then(res => {
                 setPlayer(res.data);
-                addAlert(`Purchased ${item} for $${items.find(i => i.name === item).cost.toLocaleString()}!`, 'success');
+                const cost = items.find(i => i.name === item)?.cost || 0;
+                addAlert(`Purchased ${item} for $${cost.toLocaleString()}!`, 'success');
             })
             .catch(err => {
                 console.error('Purchase failed:', err.response?.data || err.message);
-                addAlert('Purchase failed: Not enough cash or category owned.', 'error');
+                if (err.response?.status === 401) {
+                    addAlert('Session expired. Please log in again.', 'error');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('userId');
+                    window.location.reload();
+                } else {
+                    addAlert(err.response?.data?.error || 'Purchase failed: Not enough cash or category owned.', 'error');
+                }
             });
     };
 
@@ -42,7 +60,7 @@ const Shop = ({ player, setPlayer, addAlert }) => {
             case 'rangefinder': return 'fas fa-binoculars';
             case 'monitor': return 'fas fa-desktop';
             case 'trainer': return 'fas fa-dumbbell';
-            case 'mirror': return 'fas fa-mirror';
+            case 'mirror': return 'fas fa-mirror'; // Note: 'fas fa-mirror' might not exist—use 'fas fa-square' if needed
             case 'coaching': return 'fas fa-chalkboard-teacher';
             case 'raingear': return 'fas fa-umbrella';
             case 'practice': return 'fas fa-boxes';

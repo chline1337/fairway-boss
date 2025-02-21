@@ -1,5 +1,5 @@
-const { loadPlayer, savePlayer, loadItems, checkMilestones } = require('./utils');
 const jwt = require('jsonwebtoken');
+const { loadPlayer, savePlayer, loadItems, checkMilestones } = require('./utils');
 
 const SECRET_KEY = 'your-secret-key'; // Match auth.js
 
@@ -11,6 +11,7 @@ const authMiddleware = (req, res, next) => {
         req.userId = decoded.userId;
         next();
     } catch (err) {
+        console.error('Invalid token:', err.message);
         res.status(401).json({ error: 'Invalid token' });
     }
 };
@@ -19,7 +20,7 @@ module.exports = (app) => {
     app.get('/items', (req, res) => {
         try {
             console.log('Fetching items...');
-            const items = loadItems();
+            const items = loadItems(); // No DB needed—reads items.json
             console.log('Items loaded:', Object.keys(items).length, 'items');
             const itemList = Object.keys(items).map(name => ({
                 name,
@@ -38,7 +39,8 @@ module.exports = (app) => {
 
     app.post('/buy', authMiddleware, async (req, res) => {
         try {
-            const player = await loadPlayer(req.userId);
+            const db = app.locals.db;
+            const player = await loadPlayer(db, req.userId);
             const items = loadItems();
             const { item } = req.body;
             console.log('Buying item:', item);
@@ -69,8 +71,8 @@ module.exports = (app) => {
                     });
                 }
                 player.equipment.push(item);
-                checkMilestones(player);
-                await savePlayer(player);
+                checkMilestones(player); // Pure JS
+                await savePlayer(db, player);
                 console.log('Purchase successful:', player);
             } else {
                 console.log('Purchase blocked: Insufficient cash or category owned');
@@ -84,7 +86,8 @@ module.exports = (app) => {
 
     app.post('/sell', authMiddleware, async (req, res) => {
         try {
-            const player = await loadPlayer(req.userId);
+            const db = app.locals.db;
+            const player = await loadPlayer(db, req.userId);
             const items = loadItems();
             const { item } = req.body;
             console.log('Selling item:', item);
@@ -113,8 +116,8 @@ module.exports = (app) => {
             }
 
             player.equipment.splice(itemIndex, 1);
-            checkMilestones(player);
-            await savePlayer(player);
+            checkMilestones(player); // Pure JS
+            await savePlayer(db, player);
 
             res.json(player);
         } catch (err) {

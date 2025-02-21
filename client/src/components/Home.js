@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const Home = ({ player, setPlayer, addAlert }) => {
     const sell = (item) => {
-        axios.post('/sell', { item }, { // Relative path
+        axios.post('/sell', { item }, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
             .then(res => {
@@ -13,19 +13,35 @@ const Home = ({ player, setPlayer, addAlert }) => {
             })
             .catch(err => {
                 console.error('Sell failed:', err.response?.data || err.message);
-                addAlert('Failed to sell item.', 'error');
+                if (err.response?.status === 401) {
+                    addAlert('Session expired. Please log in again.', 'error');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('userId');
+                    window.location.reload(); // Trigger App.js to show Login
+                } else {
+                    addAlert('Failed to sell item.', 'error');
+                }
             });
     };
 
     const loadItems = () => JSON.parse(localStorage.getItem('items') || '{}');
+
     useEffect(() => {
-        axios.get('/items', { // Relative path
+        axios.get('/items', {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
-            .then(res =>
-                localStorage.setItem('items', JSON.stringify(Object.fromEntries(res.data.map(i => [i.name, i]))))
-            )
-            .catch(err => console.error('Failed to fetch items:', err.response?.data || err.message));
+            .then(res => {
+                localStorage.setItem('items', JSON.stringify(Object.fromEntries(res.data.map(i => [i.name, i]))));
+            })
+            .catch(err => {
+                console.error('Failed to fetch items:', err.response?.data || err.message);
+                if (err.response?.status === 401) { // Fixed typo here
+                    addAlert('Session expired. Please log in again.', 'error');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('userId');
+                    window.location.reload();
+                }
+            });
 
         if (player && player.milestones) {
             player.milestones.forEach(m => {
@@ -42,7 +58,7 @@ const Home = ({ player, setPlayer, addAlert }) => {
     const canLevelUp = player.xp >= getXpForLevel(player.level + 1);
 
     const handleLevelUp = (stat) => {
-        axios.post('/level-up', { stat }, { // Relative path
+        axios.post('/level-up', { stat }, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
             .then(res => {
@@ -51,7 +67,14 @@ const Home = ({ player, setPlayer, addAlert }) => {
             })
             .catch(err => {
                 console.error('Level-up failed:', err.response?.data || err.message);
-                addAlert('Level-up failed.', 'error');
+                if (err.response?.status === 401) {
+                    addAlert('Session expired. Please log in again.', 'error');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('userId');
+                    window.location.reload();
+                } else {
+                    addAlert('Level-up failed.', 'error');
+                }
             });
     };
 
@@ -79,7 +102,7 @@ const Home = ({ player, setPlayer, addAlert }) => {
                 </div>
             </div>
             <p>
-                Cash: ${player.cash} | Earnings: ${player.earnings} | Week: {player.week} |
+                Cash: ${player.cash.toLocaleString()} | Earnings: ${player.earnings.toLocaleString()} | Week: {player.week} |
                 Level: {player.level} | XP: {player.xp}/{getXpForLevel(player.level + 1)}
             </p>
             <div className="xp-bar">

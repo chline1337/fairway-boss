@@ -22,18 +22,31 @@ const App = () => {
 
     useEffect(() => {
         if (token) {
-            axios.get('/player', { // Relative path
-                headers: { Authorization: `Bearer ${token}` }
-            })
-                .then(res => setPlayer(res.data))
-                .catch(err => {
-                    console.error('Failed to fetch player:', err.response?.data || err.message);
-                    setToken(null);
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('userId');
-                });
+            fetchPlayer();
         }
     }, [token]);
+
+    const fetchPlayer = async () => {
+        try {
+            const res = await axios.get('/player', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setPlayer(res.data);
+        } catch (err) {
+            console.error('Failed to fetch player:', err.response?.data || err.message);
+            handleLogout(); // Clear token on auth failure
+        }
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userId');
+        setToken(null);
+        setUserId(null);
+        setPlayer(null);
+        setActiveTab('training'); // Reset tab
+        addAlert('Logged out successfully', 'success');
+    };
 
     const addAlert = (message, type = 'success') => {
         const id = `${Date.now()}-${alertIdCounter++}`;
@@ -43,8 +56,12 @@ const App = () => {
         }, 3000);
     };
 
-    if (!token) return <Login setToken={setToken} setUserId={setUserId} />;
-    if (!player) return <div className="loading">Loading...</div>;
+    if (!token) {
+        return <Login setToken={setToken} setUserId={setUserId} addAlert={addAlert} />;
+    }
+    if (!player) {
+        return <div className="loading">Loading...</div>;
+    }
 
     const renderTabContent = () => {
         switch (activeTab) {
@@ -64,7 +81,15 @@ const App = () => {
             case 'leaderboard':
                 return <Leaderboard player={player} />;
             case 'settings':
-                return <Settings player={player} setPlayer={setPlayer} addAlert={addAlert} setToken={setToken} />;
+                return (
+                    <Settings
+                        player={player}
+                        setPlayer={setPlayer}
+                        addAlert={addAlert}
+                        setToken={setToken}
+                        handleLogout={handleLogout} // Pass logout to Settings
+                    />
+                );
             default:
                 return null;
         }

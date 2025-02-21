@@ -3,7 +3,12 @@ import axios from 'axios';
 
 const Training = ({ player, setPlayer, addAlert }) => {
     const train = (stat) => {
-        axios.post('/train', { stat }, { // Relative path
+        if (!['driving', 'irons', 'putting', 'mental'].includes(stat)) {
+            addAlert('Invalid stat selected.', 'error');
+            return;
+        }
+
+        axios.post('/train', { stat }, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
             .then(res => {
@@ -13,7 +18,14 @@ const Training = ({ player, setPlayer, addAlert }) => {
             })
             .catch(err => {
                 console.error('Training failed:', err.response?.data || err.message);
-                addAlert('Training failed.', 'error');
+                if (err.response?.status === 401) {
+                    addAlert('Session expired. Please log in again.', 'error');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('userId');
+                    window.location.reload();
+                } else {
+                    addAlert('Training failed.', 'error');
+                }
             });
     };
 

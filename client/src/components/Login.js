@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const Login = ({ setToken, setUserId }) => {
+const Login = ({ setToken, setUserId, addAlert }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [isRegistering, setIsRegistering] = useState(false);
     const [email, setEmail] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsSubmitting(true);
         const endpoint = isRegistering ? '/register' : '/login'; // Relative path
         const payload = isRegistering ? { username, password, email } : { username, password };
         try {
@@ -17,9 +19,18 @@ const Login = ({ setToken, setUserId }) => {
             setUserId(res.data.userId);
             localStorage.setItem('token', res.data.token);
             localStorage.setItem('userId', res.data.userId);
+            // Clear form
+            setUsername('');
+            setPassword('');
+            setEmail('');
+            setIsRegistering(false);
+            addAlert(`${isRegistering ? 'Registered' : 'Logged in'} successfully!`, 'success');
         } catch (err) {
             console.error('Auth failed:', err.response?.data || err.message);
-            alert('Auth failed—check credentials or username might be taken');
+            const errorMsg = err.response?.data?.error || 'Auth failed—check credentials or username might be taken';
+            addAlert(errorMsg, 'error');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -36,6 +47,7 @@ const Login = ({ setToken, setUserId }) => {
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         required
+                        disabled={isSubmitting}
                     />
                     <input
                         type="password"
@@ -43,6 +55,7 @@ const Login = ({ setToken, setUserId }) => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
+                        disabled={isSubmitting}
                     />
                     {isRegistering && (
                         <input
@@ -50,10 +63,15 @@ const Login = ({ setToken, setUserId }) => {
                             placeholder="Email (optional)"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
+                            disabled={isSubmitting}
                         />
                     )}
-                    <button type="submit" className="x-login-btn">
-                        {isRegistering ? 'Sign up' : 'Log in'}
+                    <button
+                        type="submit"
+                        className="x-login-btn"
+                        disabled={isSubmitting}
+                    >
+                        {isSubmitting ? 'Submitting...' : (isRegistering ? 'Sign up' : 'Log in')}
                     </button>
                 </form>
                 <div className="x-login-toggle">
@@ -62,6 +80,7 @@ const Login = ({ setToken, setUserId }) => {
                         <button
                             onClick={() => setIsRegistering(!isRegistering)}
                             className="x-toggle-btn"
+                            disabled={isSubmitting}
                         >
                             {isRegistering ? 'Log in' : 'Sign up'}
                         </button>
