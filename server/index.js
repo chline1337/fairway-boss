@@ -6,7 +6,8 @@ require('dotenv').config();
 const app = express();
 
 app.use(express.json());
-app.use(cors({ origin: 'http://localhost:3000' })); // Update for Vercel later if needed
+app.use(cors({ origin: 'https://fairway-boss.vercel.app' })); // Replace with your URL
+ // Update for Vercel later if needed app.use(cors({ origin: 'http://localhost:3000' }));
 
 const uri = process.env.MONGO_URI || 'mongodb://localhost:27017/fairwayboss';
 const client = new MongoClient(uri);
