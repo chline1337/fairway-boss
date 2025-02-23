@@ -1,15 +1,44 @@
 const express = require('express');
 const cors = require('cors');
 const { MongoClient } = require('mongodb');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 
 app.use(express.json());
-app.use(cors({ origin: 'https://fairway-boss.vercel.app' })); // Replace with your URL
- // Update for Vercel later if needed app.use(cors({ origin: 'http://localhost:3000' }));
 
-const uri = process.env.MONGO_URI || 'mongodb://localhost:27017/fairwayboss';
+const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5000',           // Local combined setup
+    'https://fairway-boss.vercel.app'  // Vercel
+];
+
+app.use(cors({
+    origin: (origin, callback) => {
+        console.log('Request origin:', origin);
+        if (!origin) return callback(null, true);
+        const normalizedOrigin = origin.replace(/\/$/, ''); // Remove trailing slash
+        if (allowedOrigins.includes(normalizedOrigin)) {
+            callback(null, true);
+        } else if (process.env.NODE_ENV === 'development') {
+            callback(null, true); // Fallback for dev
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true
+}));
+
+console.log('Environment variables:', process.env);
+const uri = process.env.MONGO_URI?.trim();
+if (!uri) {
+    throw new Error('MONGO_URI not set in environment variables');
+}
+if (!uri.startsWith('mongodb://') && !uri.startsWith('mongodb+srv://')) {
+    throw new Error(`Invalid MONGO_URI format: ${uri}`);
+}
+console.log('MongoDB URI:', uri);
 const client = new MongoClient(uri);
 
 async function connectDB() {
@@ -19,7 +48,6 @@ async function connectDB() {
         const db = client.db('fairwayboss');
         app.locals.db = db;
 
-        // Ensure unique index on users.username
         try {
             await db.collection('users').createIndex({ username: 1 }, { unique: true });
             console.log('Unique index on users.username ensured');
@@ -27,7 +55,6 @@ async function connectDB() {
             console.error('Failed to create users index:', err.message);
         }
 
-        // Initialize milestones collection (only if empty)
         try {
             const milestoneCount = await db.collection('milestones').countDocuments();
             if (milestoneCount === 0) {
@@ -50,7 +77,6 @@ async function connectDB() {
             console.error('Failed to initialize milestones:', err.message);
         }
 
-        // Initialize items collection (only if empty)
         try {
             const itemCount = await db.collection('items').countDocuments();
             if (itemCount === 0) {
@@ -83,7 +109,6 @@ async function connectDB() {
             console.error('Failed to initialize items:', err.message);
         }
 
-        // Initialize courses collection (only if empty)
         try {
             const courseCount = await db.collection('courses').countDocuments();
             if (courseCount === 0) {
@@ -100,7 +125,6 @@ async function connectDB() {
             console.error('Failed to initialize courses:', err.message);
         }
 
-        // Initialize events collection (only if empty)
         try {
             const eventCount = await db.collection('events').countDocuments();
             if (eventCount === 0) {
@@ -121,7 +145,6 @@ async function connectDB() {
             console.error('Failed to initialize events:', err.message);
         }
 
-        // Initialize aiPlayers collection (only if empty)
         try {
             const aiPlayerCount = await db.collection('aiPlayers').countDocuments();
             if (aiPlayerCount === 0) {
@@ -144,7 +167,6 @@ async function connectDB() {
             console.error('Failed to initialize aiPlayers:', err.message);
         }
 
-        // Initialize weatherConditions collection (only if empty)
         try {
             const weatherCount = await db.collection('weatherConditions').countDocuments();
             if (weatherCount === 0) {
@@ -182,7 +204,6 @@ async function connectDB() {
 
 connectDB();
 
-// Integrate routes
 require('./routes/auth')(app);
 require('./routes/player')(app);
 require('./routes/tournament')(app);
