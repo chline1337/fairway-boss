@@ -17,7 +17,7 @@ const Home = ({ player, setPlayer, addAlert }) => {
                     addAlert('Session expired. Please log in again.', 'error');
                     localStorage.removeItem('token');
                     localStorage.removeItem('userId');
-                    window.location.reload(); // Trigger App.js to show Login
+                    window.location.reload();
                 } else {
                     addAlert('Failed to sell item.', 'error');
                 }
@@ -27,6 +27,7 @@ const Home = ({ player, setPlayer, addAlert }) => {
     const loadItems = () => JSON.parse(localStorage.getItem('items') || '{}');
 
     useEffect(() => {
+        // Fetch items
         axios.get('/items', {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
@@ -35,7 +36,7 @@ const Home = ({ player, setPlayer, addAlert }) => {
             })
             .catch(err => {
                 console.error('Failed to fetch items:', err.response?.data || err.message);
-                if (err.response?.status === 401) { // Fixed typo here
+                if (err.response?.status === 401) {
                     addAlert('Session expired. Please log in again.', 'error');
                     localStorage.removeItem('token');
                     localStorage.removeItem('userId');
@@ -43,6 +44,27 @@ const Home = ({ player, setPlayer, addAlert }) => {
                 }
             });
 
+        // Fetch player data with milestones if not already present
+        if (!player.milestones) {
+            axios.get('/player', {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            })
+                .then(res => {
+                    setPlayer(res.data);
+                    console.log('Player data with milestones:', res.data); // Debug
+                })
+                .catch(err => {
+                    console.error('Failed to fetch player:', err.response?.data || err.message);
+                    if (err.response?.status === 401) {
+                        addAlert('Session expired. Please log in again.', 'error');
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('userId');
+                        window.location.reload();
+                    }
+                });
+        }
+
+        // Check milestones for completion alerts
         if (player && player.milestones) {
             player.milestones.forEach(m => {
                 if (m.progress >= m.target && !m.completed) {
@@ -52,7 +74,7 @@ const Home = ({ player, setPlayer, addAlert }) => {
                 }
             });
         }
-    }, [player, addAlert]);
+    }, [player, setPlayer, addAlert]);
 
     const getXpForLevel = (level) => level * 100;
     const canLevelUp = player.xp >= getXpForLevel(player.level + 1);
@@ -139,7 +161,7 @@ const Home = ({ player, setPlayer, addAlert }) => {
             )}
             <h3>Career Milestones</h3>
             <div className="milestones-grid">
-                {player.milestones ? (
+                {player.milestones && player.milestones.length > 0 ? (
                     player.milestones.map(milestone => (
                         <div key={milestone.id} className={`milestone-item ${milestone.completed ? 'completed' : ''}`}>
                             <span>{milestone.name}: {milestone.progress}/{milestone.target}</span>
@@ -148,7 +170,7 @@ const Home = ({ player, setPlayer, addAlert }) => {
                         </div>
                     ))
                 ) : (
-                    <p>Loading milestones...</p>
+                    <p>No milestones available yet.</p>
                 )}
             </div>
         </div>

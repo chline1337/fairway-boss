@@ -33,4 +33,7 @@ Desktop.ini
 # package-lock.json
 # yarn.lock
 client/.env
+server/.env
 
+server/.env
+server/.env

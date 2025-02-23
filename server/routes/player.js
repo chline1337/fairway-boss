@@ -19,18 +19,28 @@ const authMiddleware = (req, res, next) => {
 
 module.exports = (app) => {
     app.get('/player', authMiddleware, async (req, res) => {
+        const db = app.locals.db;
         try {
-            const db = app.locals.db;
-            console.log('Fetching player for userId:', req.userId);
             const player = await loadPlayer(db, req.userId);
-            console.log('Player loaded:', player.name, 'with userId:', player.userId);
-            await checkMilestones(db, player);
-            console.log('Milestones checked');
-            await savePlayer(db, player);
-            console.log('Player saved');
+            const playerMilestones = await db.collection('playerMilestones').find({ userId: req.userId }).toArray();
+            const milestones = await db.collection('milestones').find({
+                _id: { $in: playerMilestones.map(pm => pm.milestoneId) }
+            }).toArray();
+            // Combine playerMilestones with milestone details
+            player.milestones = playerMilestones.map(pm => {
+                const milestone = milestones.find(m => m._id === pm.milestoneId);
+                return {
+                    id: pm._id,
+                    name: milestone.name,
+                    progress: pm.progress,
+                    target: milestone.target,
+                    completed: pm.completed,
+                    reward: milestone.reward
+                };
+            });
             res.json(player);
         } catch (err) {
-            console.error('Error in GET /player:', err.message, err.stack);
+            console.error('Error in GET /player:', err.message);
             res.status(500).json({ error: 'Failed to load player' });
         }
     });
