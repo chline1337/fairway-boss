@@ -8,7 +8,7 @@ const Home = ({ player, setPlayer, addAlert }) => {
             return;
         }
 
-        const BASE_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:5000' : '';
+        const BASE_URL = process.env.REACT_APP_ENV === 'development' ? 'http://localhost:5000' : '/api';
         console.log('NODE_ENV in Home:', process.env.NODE_ENV, 'BASE_URL:', BASE_URL); // Debug
         axios.post(`${BASE_URL}/sell`, { item }, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -35,7 +35,7 @@ const Home = ({ player, setPlayer, addAlert }) => {
 
     useEffect(() => {
         // Fetch items
-        const BASE_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:5000' : '';
+        const BASE_URL = process.env.REACT_APP_ENV === 'development' ? 'http://localhost:5000' : '/api';
         axios.get(`${BASE_URL}/api/items`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
@@ -98,7 +98,7 @@ const Home = ({ player, setPlayer, addAlert }) => {
             return;
         }
 
-        const BASE_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:5000' : '';
+        const BASE_URL = process.env.REACT_APP_ENV === 'development' ? 'http://localhost:5000' : '/api';
         axios.post(`${BASE_URL}/level-up`, { stat }, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })

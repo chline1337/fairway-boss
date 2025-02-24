@@ -70,7 +70,11 @@ const App = () => {
     }
 
     return (
-        <BrowserRouter>
+        <BrowserRouter future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true,
+        }}
+        >
             <div className="app">
                 <div className="top-bar">
                     <h1>Fairway Boss</h1>
