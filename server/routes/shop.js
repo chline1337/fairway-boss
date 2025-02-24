@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
-const { loadPlayer, savePlayer, loadItems, checkMilestones } = require('./utils'); // Correct path
+const { loadPlayer, savePlayer, loadItems, checkMilestones } = require('../utils/utils');
+ // Correct path
 
 const SECRET_KEY = 'your-secret-key';
 

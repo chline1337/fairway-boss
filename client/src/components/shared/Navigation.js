@@ -10,9 +10,6 @@ const Navigation = () => {
             <button onClick={() => navigate('/dashboard')}>
                 <i className="fas fa-home"></i> Dashboard
             </button>
-            <button onClick={() => navigate('/player')}>
-                <i className="fas fa-user"></i> Profile
-            </button>
             <button onClick={() => navigate('/training')}>
                 <i className="fas fa-dumbbell"></i> Training
             </button>

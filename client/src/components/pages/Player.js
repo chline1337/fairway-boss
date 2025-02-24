@@ -1,9 +1,14 @@
 // src/components/pages/Player.js
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import api from '../../services/api';
+import PlayerStats from '../player/PlayerStats';
+import XPBar from '../player/XPBar';
+import EquipmentList from '../player/EquipmentList';
+import MilestonesList from '../player/MilestonesList';
 
 const Player = ({ player, setPlayer, addAlert }) => {
     const loadItems = () => JSON.parse(localStorage.getItem('items') || '{}');
+    const alertedMilestones = useRef(new Set());
 
     const sell = async (item) => {
         if (!player || typeof player.cash !== 'number') {
@@ -30,8 +35,8 @@ const Player = ({ player, setPlayer, addAlert }) => {
 
     useEffect(() => {
         // Fetch items
-        api.get('/items') // Ensure this matches your backend route!
-            .then(res => {
+        api.get('/items')
+            .then((res) => {
                 if (Array.isArray(res.data)) {
                     localStorage.setItem(
                         'items',
@@ -42,7 +47,7 @@ const Player = ({ player, setPlayer, addAlert }) => {
                     localStorage.setItem('items', JSON.stringify({}));
                 }
             })
-            .catch(err => {
+            .catch((err) => {
                 console.error('Failed to fetch items:', err.response?.data || err.message);
                 if (err.response?.status === 401) {
                     addAlert('Session expired. Please log in again.', 'error');
@@ -54,11 +59,11 @@ const Player = ({ player, setPlayer, addAlert }) => {
 
         if (!player?.milestones) {
             api.get('/api/player')
-                .then(res => {
+                .then((res) => {
                     setPlayer(res.data);
                     console.log('Player data with milestones:', res.data);
                 })
-                .catch(err => {
+                .catch((err) => {
                     console.error('Failed to fetch player:', err.response?.data || err.message);
                     if (err.response?.status === 401) {
                         addAlert('Session expired. Please log in again.', 'error');
@@ -68,19 +73,29 @@ const Player = ({ player, setPlayer, addAlert }) => {
                     }
                 });
         }
+    }, [player, setPlayer, addAlert]);
 
+    // Check milestones once using a ref to avoid duplicate alerts.
+    useEffect(() => {
         if (player && player.milestones) {
-            player.milestones.forEach(m => {
-                if (m.progress >= m.target && !m.completed) {
-                    m.completed = true;
+            let updated = false;
+            const newMilestones = player.milestones.map(m => {
+                if (m.progress >= m.target && !m.completed && !alertedMilestones.current.has(m.id)) {
+                    alertedMilestones.current.add(m.id);
                     const rewardText = m.reward.cash
                         ? `$${m.reward.cash.toLocaleString()}`
                         : `${m.reward.xp} XP`;
                     addAlert(`Milestone completed: ${m.name}! Reward: ${rewardText}`, 'success');
+                    updated = true;
+                    return { ...m, completed: true };
                 }
+                return m;
             });
+            if (updated) {
+                setPlayer({ ...player, milestones: newMilestones });
+            }
         }
-    }, [player, setPlayer, addAlert]);
+    }, [player?.milestones, player, setPlayer, addAlert]);
 
     const getXpForLevel = (level) => (level || 1) * 100;
     const canLevelUp = player && typeof player.xp === 'number' && player.xp >= getXpForLevel(player.level);
@@ -112,30 +127,7 @@ const Player = ({ player, setPlayer, addAlert }) => {
     return (
         <div className="player-profile">
             <h2>{player.name || 'Rookie'}</h2>
-            <div className="stats-grid">
-                {player && player.stats ? (
-                    <>
-                        <div className="stat-item">
-                            <i className="fas fa-golf-ball"></i>
-                            <span>Driving:</span> <span>{player.stats.driving}</span>
-                        </div>
-                        <div className="stat-item">
-                            <i className="fas fa-flag"></i>
-                            <span>Irons:</span> <span>{player.stats.irons}</span>
-                        </div>
-                        <div className="stat-item">
-                            <i className="fas fa-golf-ball"></i>
-                            <span>Putting:</span> <span>{player.stats.putting}</span>
-                        </div>
-                        <div className="stat-item">
-                            <i className="fas fa-brain"></i>
-                            <span>Mental:</span> <span>{player.stats.mental}</span>
-                        </div>
-                    </>
-                ) : (
-                    <div className="loading">Loading stats...</div>
-                )}
-            </div>
+            <PlayerStats stats={player.stats} />
             <p>
                 Cash: {typeof player.cash === 'number' ? `$${player.cash.toLocaleString()}` : '$0'} |
                 Earnings: {typeof player.earnings === 'number' ? `$${player.earnings.toLocaleString()}` : '$0'} |
@@ -143,17 +135,7 @@ const Player = ({ player, setPlayer, addAlert }) => {
                 Level: {player.level || 1} |
                 XP: {typeof player.xp === 'number' ? `${player.xp}/${getXpForLevel(player.level)}` : '0/100'}
             </p>
-            <div className="xp-bar">
-                <div
-                    className="xp-progress"
-                    style={{
-                        width: `${typeof player.xp === 'number' && typeof player.level === 'number'
-                                ? (player.xp / getXpForLevel(player.level + 1)) * 100
-                                : 0
-                            }%`
-                    }}
-                ></div>
-            </div>
+            <XPBar xp={player.xp} level={player.level} getXpForLevel={getXpForLevel} />
             {canLevelUp && (
                 <div className="level-up">
                     <h4>Level Up! Choose a Stat (+2):</h4>
@@ -174,41 +156,9 @@ const Player = ({ player, setPlayer, addAlert }) => {
                 </div>
             )}
             <h3>Equipment</h3>
-            {player && player.equipment && player.equipment.length > 0 ? (
-                <ul className="equipment-list">
-                    {player.equipment.map(item => (
-                        <li key={item}>
-                            <i className="fas fa-box"></i> {item}
-                            <button className="sell-btn" onClick={() => sell(item)} disabled={!player}>
-                                Sell (75%)
-                            </button>
-                        </li>
-                    ))}
-                </ul>
-            ) : (
-                <p>No equipment owned yet.</p>
-            )}
+            <EquipmentList equipment={player.equipment} sellItem={sell} />
             <h3>Career Milestones</h3>
-            <div className="milestones-grid">
-                {player && player.milestones && player.milestones.length > 0 ? (
-                    player.milestones.map(milestone => (
-                        <div key={milestone.id} className={`milestone-item ${milestone.completed ? 'completed' : ''}`}>
-                            <span>
-                                {milestone.name}: {milestone.progress}/{milestone.target}
-                            </span>
-                            <span className="reward">
-                                Reward:{' '}
-                                {milestone.reward.cash
-                                    ? `$${milestone.reward.cash.toLocaleString()}`
-                                    : `${milestone.reward.xp} XP`}
-                            </span>
-                            {milestone.completed && <span className="completed-badge">Completed</span>}
-                        </div>
-                    ))
-                ) : (
-                    <p>No milestones available yet.</p>
-                )}
-            </div>
+            <MilestonesList milestones={player.milestones} />
         </div>
     );
 };
