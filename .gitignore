@@ -13,10 +13,6 @@ client/build/
 dist/
 build/
 
-
-# SQLite Database
-server/data/fairwayboss.db
-
 # Vercel
 .vercel/
 vercel.json.bak
