@@ -18,7 +18,10 @@
     },
     {
       "src": "/(.*)",
-      "dest": "client/build/$1"
+      "dest": "client/build/index.html", // Serve index.html for all non-API routes
+      "headers": {
+        "Cache-Control": "no-cache"
+      }
     }
   ]
 }
