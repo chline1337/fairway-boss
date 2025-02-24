@@ -9,9 +9,8 @@ npm-debug.log
 yarn-error.log
 
 # Build Outputs
-client/build/
 dist/
-build/
+
 
 # Vercel
 .vercel/
