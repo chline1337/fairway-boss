@@ -13,7 +13,7 @@ const Training = ({ player, setPlayer, addAlert }) => {
             return;
         }
 
-        const BASE_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:5000' : ''; // Match backend
+        const BASE_URL = process.env.REACT_APP_ENV === 'development' ? 'http://localhost:5000' : '/api';
         axios.post(`${BASE_URL}/train`, { stat }, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })

@@ -32,7 +32,7 @@ const App = () => {
         if (token) {
             const fetchPlayer = async () => {
                 try {
-                    const BASE_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:5000' : '/api';
+                    const BASE_URL = process.env.REACT_APP_ENV === 'development' ? 'http://localhost:5000' : '/api';
                     console.log('NODE_ENV in App:', process.env.NODE_ENV, 'BASE_URL:', BASE_URL); // Debug
                     const res = await axios.get(`${BASE_URL}/api/player`, {
                         headers: { Authorization: `Bearer ${token}` }
