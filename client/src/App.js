@@ -33,9 +33,11 @@ const App = () => {
             const fetchPlayer = async () => {
                 try {
                     const BASE_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:5000' : '/api';
-                    const res = await axios.get(`${BASE_URL}/player`, {
+                    console.log('NODE_ENV in App:', process.env.NODE_ENV, 'BASE_URL:', BASE_URL); // Debug
+                    const res = await axios.get(`${BASE_URL}/api/player`, {
                         headers: { Authorization: `Bearer ${token}` }
                     });
+                    console.log('Player data:', res.data);
                     setPlayer(res.data);
                 } catch (err) {
                     console.error('Failed to fetch player:', err.response?.data || err.message);
@@ -74,11 +76,12 @@ const App = () => {
                     <h1>Fairway Boss</h1>
                     <div className="top-right">
                         <span className="cash">
-                            <i className="fas fa-dollar-sign"></i> {player.cash.toLocaleString()}
+                            <i className="fas fa-dollar-sign"></i>
+                            {player && typeof player.cash === 'number' ? player.cash.toLocaleString() : '0'}
                         </span>
-                        <span className="level">Level: {player.level}</span>
+                        <span className="level">Level: {player && player.level ? player.level : '1'}</span>
                         <button className="icon-btn" onClick={() => window.location.href = '/player'} title="Player Info">
-                            <span className="nickname">{player.name}</span>
+                            <span className="nickname">{player && player.name ? player.name : 'Rookie'}</span>
                             <i className="fas fa-user"></i>
                         </button>
                         <button className="icon-btn" onClick={() => window.location.href = '/settings'} title="Settings">

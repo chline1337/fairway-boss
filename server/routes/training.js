@@ -21,16 +21,28 @@ module.exports = (app) => {
             const db = app.locals.db;
             const player = await loadPlayer(db, req.userId);
             const { stat } = req.body;
+
             if (!['driving', 'irons', 'putting', 'mental'].includes(stat)) {
                 return res.status(400).json({ error: 'Invalid stat' });
             }
+
+            // Ensure player.stats exists with defaults
+            if (!player.stats) {
+                player.stats = { driving: 60, irons: 50, putting: 45, mental: 55 };
+            }
+
+            if (typeof player.stats[stat] !== 'number') {
+                return res.status(400).json({ error: 'Invalid stat value' });
+            }
+
             const statIncrease = Math.floor(Math.random() * 3) + 1;
-            player.stats[stat] += statIncrease;
+            player.stats[stat] = Math.min(player.stats[stat] + statIncrease, 100); // Cap at 100
             player.xp = (player.xp || 0) + Math.floor(Math.random() * 11) + 10;
 
             await db.collection('playerMilestones').updateOne(
                 { userId: req.userId, milestoneId: 'train_50', completed: false },
-                { $inc: { progress: 1 } }
+                { $inc: { progress: 1 } },
+                { upsert: true } // Create if not exists
             );
 
             await checkMilestones(db, player);
@@ -38,14 +50,10 @@ module.exports = (app) => {
             res.json(player);
         } catch (err) {
             console.error('Error in /train:', err.message);
-            if (err.response?.status === 401) {
-                res.status(401).json({ error: 'Session expired. Please log in again.' });
-                localStorage.removeItem('token');
-                localStorage.removeItem('userId');
-                window.location.reload();
-            } else {
-                res.status(500).json({ error: 'Training failed' });
+            if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+                return res.status(401).json({ error: 'Invalid or expired token' });
             }
+            res.status(500).json({ error: 'Training failed' });
         }
     });
 };

@@ -1,6 +1,5 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-// Removed unused import: const { db } = require('../../utils');
 const SECRET_KEY = 'your-secret-key';
 
 module.exports = (app) => {
@@ -21,7 +20,7 @@ module.exports = (app) => {
                 password: hashedPassword,
                 email: email || null
             });
-            const userId = result.insertedId;
+            const userId = result.insertedId.toString(); // Convert ObjectId to string
             console.log('Registered user:', { username, userId });
             const token = jwt.sign({ userId }, SECRET_KEY, { expiresIn: '1h' });
             res.json({ token, userId });
@@ -48,7 +47,7 @@ module.exports = (app) => {
                 console.error('Login failed—wrong password for:', username);
                 return res.status(401).json({ error: 'Invalid credentials' });
             }
-            const userId = user._id;
+            const userId = user._id.toString(); // Convert ObjectId to string
             const token = jwt.sign({ userId }, SECRET_KEY, { expiresIn: '1h' });
             console.log('Logged in user:', { username, userId });
             res.json({ token, userId });

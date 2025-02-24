@@ -3,7 +3,14 @@ import axios from 'axios';
 
 const Home = ({ player, setPlayer, addAlert }) => {
     const sell = (item) => {
-        axios.post('/sell', { item }, {
+        if (!player || typeof player.cash !== 'number') {
+            addAlert('Player data not loaded. Please try again.', 'error');
+            return;
+        }
+
+        const BASE_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:5000' : '';
+        console.log('NODE_ENV in Home:', process.env.NODE_ENV, 'BASE_URL:', BASE_URL); // Debug
+        axios.post(`${BASE_URL}/sell`, { item }, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
             .then(res => {
@@ -28,11 +35,17 @@ const Home = ({ player, setPlayer, addAlert }) => {
 
     useEffect(() => {
         // Fetch items
-        axios.get('/items', {
+        const BASE_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:5000' : '';
+        axios.get(`${BASE_URL}/api/items`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
             .then(res => {
-                localStorage.setItem('items', JSON.stringify(Object.fromEntries(res.data.map(i => [i.name, i]))));
+                if (Array.isArray(res.data)) {
+                    localStorage.setItem('items', JSON.stringify(Object.fromEntries(res.data.map(i => [i.name, i]))));
+                } else {
+                    console.warn('Unexpected items format:', res.data);
+                    localStorage.setItem('items', JSON.stringify({})); // Default to empty object
+                }
             })
             .catch(err => {
                 console.error('Failed to fetch items:', err.response?.data || err.message);
@@ -45,13 +58,13 @@ const Home = ({ player, setPlayer, addAlert }) => {
             });
 
         // Fetch player data with milestones if not already present
-        if (!player.milestones) {
-            axios.get('/player', {
+        if (!player?.milestones) {
+            axios.get(`${BASE_URL}/api/player`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             })
                 .then(res => {
                     setPlayer(res.data);
-                    console.log('Player data with milestones:', res.data); // Debug
+                    console.log('Player data with milestones:', res.data);
                 })
                 .catch(err => {
                     console.error('Failed to fetch player:', err.response?.data || err.message);
@@ -69,18 +82,24 @@ const Home = ({ player, setPlayer, addAlert }) => {
             player.milestones.forEach(m => {
                 if (m.progress >= m.target && !m.completed) {
                     m.completed = true;
-                    const rewardText = m.reward.cash ? `$${m.reward.cash}` : `${m.reward.xp} XP`;
+                    const rewardText = m.reward.cash ? `$${m.reward.cash.toLocaleString()}` : `${m.reward.xp} XP`;
                     addAlert(`Milestone completed: ${m.name}! Reward: ${rewardText}`, 'success');
                 }
             });
         }
     }, [player, setPlayer, addAlert]);
 
-    const getXpForLevel = (level) => level * 100;
-    const canLevelUp = player.xp >= getXpForLevel(player.level + 1);
+    const getXpForLevel = (level) => (level || 1) * 100; // Default to level 1 if undefined
+    const canLevelUp = player && typeof player.xp === 'number' && player.xp >= getXpForLevel(player.level);
 
     const handleLevelUp = (stat) => {
-        axios.post('/level-up', { stat }, {
+        if (!player || !player.stats || typeof player.stats[stat] !== 'number') {
+            addAlert('Player stats not loaded. Please try again.', 'error');
+            return;
+        }
+
+        const BASE_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:5000' : '';
+        axios.post(`${BASE_URL}/level-up`, { stat }, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
             .then(res => {
@@ -100,57 +119,74 @@ const Home = ({ player, setPlayer, addAlert }) => {
             });
     };
 
-    if (!player) return <div>Loading profile...</div>;
+    if (!player) return <div className="loading">Loading profile...</div>;
 
     return (
         <div className="home">
-            <h2>{player.name}</h2>
+            <h2>{player.name || 'Rookie'}</h2>
             <div className="stats-grid">
-                <div className="stat-item">
-                    <i className="fas fa-golf-ball"></i>
-                    <span>Driving:</span> <span>{player.stats.driving}</span>
-                </div>
-                <div className="stat-item">
-                    <i className="fas fa-flag"></i>
-                    <span>Irons:</span> <span>{player.stats.irons}</span>
-                </div>
-                <div className="stat-item">
-                    <i className="fas fa-golf-ball"></i>
-                    <span>Putting:</span> <span>{player.stats.putting}</span>
-                </div>
-                <div className="stat-item">
-                    <i className="fas fa-brain"></i>
-                    <span>Mental:</span> <span>{player.stats.mental}</span>
-                </div>
+                {player && player.stats ? (
+                    <>
+                        <div className="stat-item">
+                            <i className="fas fa-golf-ball"></i>
+                            <span>Driving:</span> <span>{player.stats.driving}</span>
+                        </div>
+                        <div className="stat-item">
+                            <i className="fas fa-flag"></i>
+                            <span>Irons:</span> <span>{player.stats.irons}</span>
+                        </div>
+                        <div className="stat-item">
+                            <i className="fas fa-golf-ball"></i>
+                            <span>Putting:</span> <span>{player.stats.putting}</span>
+                        </div>
+                        <div className="stat-item">
+                            <i className="fas fa-brain"></i>
+                            <span>Mental:</span> <span>{player.stats.mental}</span>
+                        </div>
+                    </>
+                ) : (
+                    <div className="loading">Loading stats...</div>
+                )}
             </div>
             <p>
-                Cash: ${player.cash.toLocaleString()} | Earnings: ${player.earnings.toLocaleString()} | Week: {player.week} |
-                Level: {player.level} | XP: {player.xp}/{getXpForLevel(player.level + 1)}
+                Cash: {typeof player.cash === 'number' ? `$${player.cash.toLocaleString()}` : '$0'} |
+                Earnings: {typeof player.earnings === 'number' ? `$${player.earnings.toLocaleString()}` : '$0'} |
+                Week: {player.week || 1} |
+                Level: {player.level || 1} |
+                XP: {typeof player.xp === 'number' ? `${player.xp}/${getXpForLevel(player.level)}` : '0/100'}
             </p>
             <div className="xp-bar">
                 <div
                     className="xp-progress"
-                    style={{ width: `${(player.xp / getXpForLevel(player.level + 1)) * 100}%` }}
+                    style={{ width: `${(typeof player.xp === 'number' && typeof player.level === 'number' ? (player.xp / getXpForLevel(player.level + 1)) * 100 : 0)}%` }}
                 ></div>
             </div>
             {canLevelUp && (
                 <div className="level-up">
                     <h4>Level Up! Choose a Stat (+2):</h4>
                     <div className="button-group">
-                        <button onClick={() => handleLevelUp('driving')}>Driving</button>
-                        <button onClick={() => handleLevelUp('irons')}>Irons</button>
-                        <button onClick={() => handleLevelUp('putting')}>Putting</button>
-                        <button onClick={() => handleLevelUp('mental')}>Mental</button>
+                        <button onClick={() => handleLevelUp('driving')} disabled={!player || !player.stats}>
+                            Driving
+                        </button>
+                        <button onClick={() => handleLevelUp('irons')} disabled={!player || !player.stats}>
+                            Irons
+                        </button>
+                        <button onClick={() => handleLevelUp('putting')} disabled={!player || !player.stats}>
+                            Putting
+                        </button>
+                        <button onClick={() => handleLevelUp('mental')} disabled={!player || !player.stats}>
+                            Mental
+                        </button>
                     </div>
                 </div>
             )}
             <h3>Equipment</h3>
-            {player.equipment && player.equipment.length > 0 ? (
+            {player && player.equipment && player.equipment.length > 0 ? (
                 <ul className="equipment-list">
                     {player.equipment.map(item => (
                         <li key={item}>
                             <i className="fas fa-box"></i> {item}
-                            <button className="sell-btn" onClick={() => sell(item)}>
+                            <button className="sell-btn" onClick={() => sell(item)} disabled={!player}>
                                 Sell (75%)
                             </button>
                         </li>
@@ -161,11 +197,13 @@ const Home = ({ player, setPlayer, addAlert }) => {
             )}
             <h3>Career Milestones</h3>
             <div className="milestones-grid">
-                {player.milestones && player.milestones.length > 0 ? (
+                {player && player.milestones && player.milestones.length > 0 ? (
                     player.milestones.map(milestone => (
                         <div key={milestone.id} className={`milestone-item ${milestone.completed ? 'completed' : ''}`}>
                             <span>{milestone.name}: {milestone.progress}/{milestone.target}</span>
-                            <span className="reward">Reward: {milestone.reward.cash ? `$${milestone.reward.cash}` : `${milestone.reward.xp} XP`}</span>
+                            <span className="reward">
+                                Reward: {milestone.reward.cash ? `$${milestone.reward.cash.toLocaleString()}` : `${milestone.reward.xp} XP`}
+                            </span>
                             {milestone.completed && <span className="completed-badge">Completed</span>}
                         </div>
                     ))

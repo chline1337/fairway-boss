@@ -4,21 +4,32 @@ import axios from 'axios';
 const Login = ({ setToken, setUserId, addAlert }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [isRegistering, setIsRegistering] = useState(false);
     const [email, setEmail] = useState('');
+    const [isRegistering, setIsRegistering] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState(''); // Track error state
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
+        setError(''); // Clear previous errors
         const endpoint = isRegistering ? '/register' : '/login'; // Relative path
         const payload = isRegistering ? { username, password, email } : { username, password };
         try {
-            const res = await axios.post(endpoint, payload);
-            setToken(res.data.token);
-            setUserId(res.data.userId);
-            localStorage.setItem('token', res.data.token);
-            localStorage.setItem('userId', res.data.userId);
+            const res = await axios.post(`http://localhost:5000${endpoint}`, payload, {
+                // Explicitly target backend in development
+                headers: { 'Content-Type': 'application/json' } // Ensure JSON payload
+            });
+            // Validate response structure
+            if (!res.data || typeof res.data !== 'object' || !res.data.token || !res.data.userId) {
+                throw new Error('Invalid response from server: ' + JSON.stringify(res.data));
+            }
+            const token = res.data.token;
+            const userId = res.data.userId.toString(); // Ensure string
+            setToken(token);
+            setUserId(userId);
+            localStorage.setItem('token', token);
+            localStorage.setItem('userId', userId);
             // Clear form
             setUsername('');
             setPassword('');
@@ -26,8 +37,9 @@ const Login = ({ setToken, setUserId, addAlert }) => {
             setIsRegistering(false);
             addAlert(`${isRegistering ? 'Registered' : 'Logged in'} successfully!`, 'success');
         } catch (err) {
-            console.error('Auth failed:', err.response?.data || err.message);
-            const errorMsg = err.response?.data?.error || 'Auth failed—check credentials or username might be taken';
+            const errorMsg = err.response?.data?.error || err.message || 'Authentication failed—check credentials or try again';
+            console.error('Auth failed:', errorMsg);
+            setError(errorMsg);
             addAlert(errorMsg, 'error');
         } finally {
             setIsSubmitting(false);
@@ -40,6 +52,7 @@ const Login = ({ setToken, setUserId, addAlert }) => {
                 <h1>Fairway Boss</h1>
             </div>
             <div className="x-login-form-container">
+                {error && <div className="error-message">{error}</div>}
                 <form onSubmit={handleSubmit} className="x-login-form">
                     <input
                         type="text"
