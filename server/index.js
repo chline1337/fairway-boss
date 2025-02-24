@@ -10,9 +10,15 @@ app.use(express.json());
 
 const allowedOrigins = [
     'http://localhost:3000',
-    'http://localhost:5000',           // Local combined setup
-    'https://fairway-boss.vercel.app'  // Vercel
+    'http://localhost:5000',
+    'https://fairway-boss.vercel.app',
+    'https://fairway-boss-git-master-chline1337.vercel.app'  // Add preview URL
 ];
+
+app.use((req, res, next) => {
+    console.log(`Incoming request: ${req.method} ${req.url} from ${req.get('origin') || 'No origin'}`);
+    next();
+});
 
 app.use(cors({
     origin: (origin, callback) => {
