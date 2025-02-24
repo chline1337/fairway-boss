@@ -1,12 +1,12 @@
 // src/services/api.js
 import axios from 'axios';
 
-// Determine the base URL based on the environment
+// Determine the base URL based on the environment.
+// In production, REACT_APP_API_URL should be set in Render (e.g., "https://your-backend.onrender.com").
 const BASE_URL = process.env.REACT_APP_ENV === 'development'
     ? 'http://localhost:5000'
-    : '/api';
+    : process.env.REACT_APP_API_URL;
 
-// Create an Axios instance with default settings
 const api = axios.create({
     baseURL: BASE_URL,
     headers: {
