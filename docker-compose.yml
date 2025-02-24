@@ -1,19 +1,21 @@
-version: '3.8'
 services:
-client:
-build: ./ client
-ports:
-- "3000:80"  # Host: Container
-depends_on:
-- server
-environment:
-- NODE_ENV=production
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: fairwayboss_server
+    ports:
+      - "5000:5000"
+    environment:
+      MONGO_URI: "mongodb+srv://fairwayboss:vJ61vN9c1DAiPWB8@fairwaybosscluster.uujkm.mongodb.net/?retryWrites=true&w=majority&appName=FairwayBossCluster"
+      SECRET_KEY: "your-secret-key"
 
-server:
-build: ./ server
-ports:
-- "5000:5000"  # Host: Container
-volumes:
-- ./ server / data: /app/data  # Persist SQLite DB
-environment:
-- NODE_ENV=production
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: fairwayboss_client
+    ports:
+      - "3000:80"
+    depends_on:
+      - server

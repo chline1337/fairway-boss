@@ -1,0 +1,427 @@
+openapi: 3.0.0
+info:
+  title: Fairway Boss API
+  version: 1.0.0
+  description: >
+    API documentation for the Fairway Boss application.
+servers:
+  - url: http://localhost:5000
+
+tags:
+  - name: Auth
+    description: User registration, login, logout
+  - name: Player
+    description: Player profile, stats, name updates, resets
+  - name: Shop
+    description: Listing items, buying/selling equipment
+  - name: Training
+    description: Training endpoint to improve stats
+  - name: Level
+    description: Level-up functionality
+  - name: Leaderboard
+    description: Leaderboard listing and points
+  - name: Tournament
+    description: Tournament setup, history, and creation
+
+paths:
+
+  ######################################
+  # Auth Endpoints
+  ######################################
+  /register:
+    post:
+      summary: Register a new user
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                email:
+                  type: string
+      responses:
+        "200":
+          description: Successfully registered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  userId:
+                    type: string
+        "400":
+          description: Invalid input or username taken
+        "500":
+          description: Registration failed
+
+  /login:
+    post:
+      summary: Login a user
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "200":
+          description: Successfully logged in
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  userId:
+                    type: string
+        "401":
+          description: Invalid credentials
+        "500":
+          description: Login failed
+
+  /logout:
+    post:
+      summary: Logout a user
+      tags: [Auth]
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  ######################################
+  # Player Endpoints
+  ######################################
+  /api/player:
+    get:
+      summary: Fetch the current player profile
+      tags: [Player]
+      responses:
+        "200":
+          description: Returns player info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  cash:
+                    type: number
+                  level:
+                    type: number
+                  stats:
+                    type: object
+                    properties:
+                      driving:
+                        type: number
+                      irons:
+                        type: number
+                      putting:
+                        type: number
+                      mental:
+                        type: number
+                  equipment:
+                    type: array
+                    items:
+                      type: string
+                  week:
+                    type: number
+                  earnings:
+                    type: number
+                  wins:
+                    type: number
+                  xp:
+                    type: number
+                  milestones:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        progress:
+                          type: number
+                        target:
+                          type: number
+                        completed:
+                          type: boolean
+                        reward:
+                          type: object
+                          properties:
+                            cash:
+                              type: number
+                            xp:
+                              type: number
+        "404":
+          description: Player not found
+        "500":
+          description: Failed to load player
+
+  /update-name:
+    post:
+      summary: Update player's name
+      tags: [Player]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        "200":
+          description: Name updated successfully
+        "400":
+          description: Invalid name
+        "500":
+          description: Update name failed
+
+  /reset:
+    post:
+      summary: Reset player data
+      tags: [Player]
+      responses:
+        "200":
+          description: Returns the reset player object
+        "500":
+          description: Reset failed
+
+  ######################################
+  # Shop Endpoints
+  ######################################
+  /items:
+    get:
+      summary: Fetch all items in the shop
+      tags: [Shop]
+      responses:
+        "200":
+          description: Returns an array of shop items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    cost:
+                      type: number
+                    boost:
+                      type: string
+                    category:
+                      type: string
+        "500":
+          description: Failed to load items
+
+  /buy:
+    post:
+      summary: Buy an item
+      tags: [Shop]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                item:
+                  type: string
+      responses:
+        "200":
+          description: Purchase success or no changes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  cash:
+                    type: number
+                  equipment:
+                    type: array
+                    items:
+                      type: string
+        "500":
+          description: Purchase failed
+
+  /sell:
+    post:
+      summary: Sell an item
+      tags: [Shop]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                item:
+                  type: string
+      responses:
+        "200":
+          description: Sell success or no changes
+        "500":
+          description: Sell failed
+
+  ######################################
+  # Training Endpoints
+  ######################################
+  /train:
+    post:
+      summary: Train a stat
+      tags: [Training]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                stat:
+                  type: string
+                  enum:
+                    - driving
+                    - irons
+                    - putting
+                    - mental
+      responses:
+        "200":
+          description: Training success
+        "400":
+          description: Invalid stat
+        "500":
+          description: Training failed
+
+  ######################################
+  # Level Endpoints
+  ######################################
+  /level-up:
+    post:
+      summary: Level up a stat if XP is sufficient
+      tags: [Level]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                stat:
+                  type: string
+                  enum:
+                    - driving
+                    - irons
+                    - putting
+                    - mental
+      responses:
+        "200":
+          description: Updated player object
+        "500":
+          description: Level-up failed
+
+  ######################################
+  # Leaderboard Endpoints
+  ######################################
+  /leaderboard:
+    get:
+      summary: Fetch season leaderboard
+      tags: [Leaderboard]
+      responses:
+        "200":
+          description: Returns an array of leaderboard entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    points:
+                      type: number
+                    wins:
+                      type: number
+        "401":
+          description: Unauthorized
+        "500":
+          description: Failed to load leaderboard
+
+  ######################################
+  # Tournament Endpoints
+  ######################################
+  /tournament/options:
+    get:
+      summary: Get tournament options (events, courses, weather)
+      tags: [Tournament]
+      responses:
+        "200":
+          description: Returns available events, courses, weather
+        "500":
+          description: Failed to load tournament options
+
+  /tournament/history:
+    get:
+      summary: Get tournament history
+      tags: [Tournament]
+      responses:
+        "200":
+          description: Array of previous tournaments
+        "500":
+          description: Failed to load tournament history
+
+  /tournament:
+    post:
+      summary: Create/start a new tournament
+      tags: [Tournament]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tactic:
+                  type: string
+                  enum:
+                    - aggressive
+                    - conservative
+                    - balanced
+                courseName:
+                  type: string
+                weatherName:
+                  type: string
+                eventName:
+                  type: string
+      responses:
+        "200":
+          description: Returns the new tournament data
+        "500":
+          description: Tournament failed

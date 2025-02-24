@@ -2,6 +2,8 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./swagger'); // The file from Step 2
 require('dotenv').config({ path: path.resolve(__dirname, './.env') });
 
 const { connectDB, getDB } = require('./config/db'); // the new db module
@@ -47,6 +49,9 @@ app.use((req, res, next) => {
         app.use(leaderboardRoutes);
         app.use(tournamentRoutes);
         app.use(trainingRoutes);
+
+        // Serve your YAML-based Swagger spec at /api-docs
+        app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
         // Simple health check
         app.get('/api', (req, res) => res.json({ status: 'API is live' }));
