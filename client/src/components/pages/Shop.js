@@ -1,14 +1,14 @@
+// src/components/Shop.js
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
+
 
 const Shop = ({ player, setPlayer, addAlert }) => {
     const [items, setItems] = useState([]);
     const [filter, setFilter] = useState('All');
 
     useEffect(() => {
-        axios.get('/items', {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        })
+        api.get('/items')
             .then(res => setItems(res.data))
             .catch(err => {
                 console.error('Failed to load items:', err.response?.data || err.message);
@@ -23,27 +23,24 @@ const Shop = ({ player, setPlayer, addAlert }) => {
             });
     }, [addAlert]);
 
-    const buy = (item) => {
+    const buy = async (item) => {
         console.log('Sending buy request for:', item);
-        axios.post('/buy', { item }, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        })
-            .then(res => {
-                setPlayer(res.data);
-                const cost = items.find(i => i.name === item)?.cost || 0;
-                addAlert(`Purchased ${item} for $${cost.toLocaleString()}!`, 'success');
-            })
-            .catch(err => {
-                console.error('Purchase failed:', err.response?.data || err.message);
-                if (err.response?.status === 401) {
-                    addAlert('Session expired. Please log in again.', 'error');
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('userId');
-                    window.location.reload();
-                } else {
-                    addAlert(err.response?.data?.error || 'Purchase failed: Not enough cash or category owned.', 'error');
-                }
-            });
+        try {
+            const res = await api.post('/buy', { item });
+            setPlayer(res.data);
+            const cost = items.find(i => i.name === item)?.cost || 0;
+            addAlert(`Purchased ${item} for $${cost.toLocaleString()}!`, 'success');
+        } catch (err) {
+            console.error('Purchase failed:', err.response?.data || err.message);
+            if (err.response?.status === 401) {
+                addAlert('Session expired. Please log in again.', 'error');
+                localStorage.removeItem('token');
+                localStorage.removeItem('userId');
+                window.location.reload();
+            } else {
+                addAlert(err.response?.data?.error || 'Purchase failed: Not enough cash or category owned.', 'error');
+            }
+        }
     };
 
     const getIcon = (category) => {
@@ -60,7 +57,7 @@ const Shop = ({ player, setPlayer, addAlert }) => {
             case 'rangefinder': return 'fas fa-binoculars';
             case 'monitor': return 'fas fa-desktop';
             case 'trainer': return 'fas fa-dumbbell';
-            case 'mirror': return 'fas fa-mirror'; // Note: 'fas fa-mirror' might not exist—use 'fas fa-square' if needed
+            case 'mirror': return 'fas fa-mirror'; // If unavailable, consider using 'fas fa-square'
             case 'coaching': return 'fas fa-chalkboard-teacher';
             case 'raingear': return 'fas fa-umbrella';
             case 'practice': return 'fas fa-boxes';

@@ -1,36 +1,31 @@
+// src/components/pages/Login.js
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const Login = ({ setToken, setUserId, addAlert }) => {
+const Login = ({ setToken, addAlert }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [email, setEmail] = useState('');
     const [isRegistering, setIsRegistering] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [error, setError] = useState(''); // Track error state
+    const [error, setError] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
-        setError(''); // Clear previous errors
-        const endpoint = isRegistering ? '/register' : '/login'; // Relative path
+        setError('');
+        const endpoint = isRegistering ? '/register' : '/login';
         const payload = isRegistering ? { username, password, email } : { username, password };
         try {
             const res = await axios.post(`http://localhost:5000${endpoint}`, payload, {
-                // Explicitly target backend in development
-                headers: { 'Content-Type': 'application/json' } // Ensure JSON payload
+                headers: { 'Content-Type': 'application/json' }
             });
-            // Validate response structure
-            if (!res.data || typeof res.data !== 'object' || !res.data.token || !res.data.userId) {
+            if (!res.data || typeof res.data !== 'object' || !res.data.token) {
                 throw new Error('Invalid response from server: ' + JSON.stringify(res.data));
             }
             const token = res.data.token;
-            const userId = res.data.userId.toString(); // Ensure string
             setToken(token);
-            setUserId(userId);
             localStorage.setItem('token', token);
-            localStorage.setItem('userId', userId);
-            // Clear form
             setUsername('');
             setPassword('');
             setEmail('');
@@ -79,22 +74,14 @@ const Login = ({ setToken, setUserId, addAlert }) => {
                             disabled={isSubmitting}
                         />
                     )}
-                    <button
-                        type="submit"
-                        className="x-login-btn"
-                        disabled={isSubmitting}
-                    >
+                    <button type="submit" className="x-login-btn" disabled={isSubmitting}>
                         {isSubmitting ? 'Submitting...' : (isRegistering ? 'Sign up' : 'Log in')}
                     </button>
                 </form>
                 <div className="x-login-toggle">
                     <p>
                         {isRegistering ? 'Already have an account?' : "Don't have an account?"}
-                        <button
-                            onClick={() => setIsRegistering(!isRegistering)}
-                            className="x-toggle-btn"
-                            disabled={isSubmitting}
-                        >
+                        <button onClick={() => setIsRegistering(!isRegistering)} className="x-toggle-btn" disabled={isSubmitting}>
                             {isRegistering ? 'Log in' : 'Sign up'}
                         </button>
                     </p>

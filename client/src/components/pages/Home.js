@@ -1,47 +1,43 @@
+// src/components/Home.js
 import React, { useEffect } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 
 const Home = ({ player, setPlayer, addAlert }) => {
-    const sell = (item) => {
+    const loadItems = () => JSON.parse(localStorage.getItem('items') || '{}');
+
+    const sell = async (item) => {
         if (!player || typeof player.cash !== 'number') {
             addAlert('Player data not loaded. Please try again.', 'error');
             return;
         }
 
-        const BASE_URL = process.env.REACT_APP_ENV === 'development' ? 'http://localhost:5000' : '/api';
-        console.log('NODE_ENV in Home:', process.env.NODE_ENV, 'BASE_URL:', BASE_URL); // Debug
-        axios.post(`${BASE_URL}/sell`, { item }, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        })
-            .then(res => {
-                setPlayer(res.data);
-                const refund = Math.floor(loadItems()[item]?.cost * 0.75 || 0);
-                addAlert(`Sold ${item} for $${refund.toLocaleString()}!`, 'success');
-            })
-            .catch(err => {
-                console.error('Sell failed:', err.response?.data || err.message);
-                if (err.response?.status === 401) {
-                    addAlert('Session expired. Please log in again.', 'error');
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('userId');
-                    window.location.reload();
-                } else {
-                    addAlert('Failed to sell item.', 'error');
-                }
-            });
+        try {
+            const res = await api.post('/sell', { item });
+            setPlayer(res.data);
+            const refund = Math.floor(loadItems()[item]?.cost * 0.75 || 0);
+            addAlert(`Sold ${item} for $${refund.toLocaleString()}!`, 'success');
+        } catch (err) {
+            console.error('Sell failed:', err.response?.data || err.message);
+            if (err.response?.status === 401) {
+                addAlert('Session expired. Please log in again.', 'error');
+                localStorage.removeItem('token');
+                localStorage.removeItem('userId');
+                window.location.reload();
+            } else {
+                addAlert('Failed to sell item.', 'error');
+            }
+        }
     };
 
-    const loadItems = () => JSON.parse(localStorage.getItem('items') || '{}');
-
     useEffect(() => {
-        // Fetch items
-        const BASE_URL = process.env.REACT_APP_ENV === 'development' ? 'http://localhost:5000' : '/api';
-        axios.get(`${BASE_URL}/api/items`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        })
+        // Fetch items from the correct endpoint (adjusted from '/api/items' to '/items')
+        api.get('/items')
             .then(res => {
                 if (Array.isArray(res.data)) {
-                    localStorage.setItem('items', JSON.stringify(Object.fromEntries(res.data.map(i => [i.name, i]))));
+                    localStorage.setItem(
+                        'items',
+                        JSON.stringify(Object.fromEntries(res.data.map(i => [i.name, i])))
+                    );
                 } else {
                     console.warn('Unexpected items format:', res.data);
                     localStorage.setItem('items', JSON.stringify({})); // Default to empty object
@@ -59,9 +55,7 @@ const Home = ({ player, setPlayer, addAlert }) => {
 
         // Fetch player data with milestones if not already present
         if (!player?.milestones) {
-            axios.get(`${BASE_URL}/api/player`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            })
+            api.get('/api/player')
                 .then(res => {
                     setPlayer(res.data);
                     console.log('Player data with milestones:', res.data);
@@ -82,7 +76,9 @@ const Home = ({ player, setPlayer, addAlert }) => {
             player.milestones.forEach(m => {
                 if (m.progress >= m.target && !m.completed) {
                     m.completed = true;
-                    const rewardText = m.reward.cash ? `$${m.reward.cash.toLocaleString()}` : `${m.reward.xp} XP`;
+                    const rewardText = m.reward.cash
+                        ? `$${m.reward.cash.toLocaleString()}`
+                        : `${m.reward.xp} XP`;
                     addAlert(`Milestone completed: ${m.name}! Reward: ${rewardText}`, 'success');
                 }
             });
@@ -92,31 +88,27 @@ const Home = ({ player, setPlayer, addAlert }) => {
     const getXpForLevel = (level) => (level || 1) * 100; // Default to level 1 if undefined
     const canLevelUp = player && typeof player.xp === 'number' && player.xp >= getXpForLevel(player.level);
 
-    const handleLevelUp = (stat) => {
+    const handleLevelUp = async (stat) => {
         if (!player || !player.stats || typeof player.stats[stat] !== 'number') {
             addAlert('Player stats not loaded. Please try again.', 'error');
             return;
         }
 
-        const BASE_URL = process.env.REACT_APP_ENV === 'development' ? 'http://localhost:5000' : '/api';
-        axios.post(`${BASE_URL}/level-up`, { stat }, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        })
-            .then(res => {
-                setPlayer(res.data);
-                addAlert(`Leveled up to ${res.data.level}! ${stat.charAt(0).toUpperCase() + stat.slice(1)} +2`, 'success');
-            })
-            .catch(err => {
-                console.error('Level-up failed:', err.response?.data || err.message);
-                if (err.response?.status === 401) {
-                    addAlert('Session expired. Please log in again.', 'error');
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('userId');
-                    window.location.reload();
-                } else {
-                    addAlert('Level-up failed.', 'error');
-                }
-            });
+        try {
+            const res = await api.post('/level-up', { stat });
+            setPlayer(res.data);
+            addAlert(`Leveled up to ${res.data.level}! ${stat.charAt(0).toUpperCase() + stat.slice(1)} +2`, 'success');
+        } catch (err) {
+            console.error('Level-up failed:', err.response?.data || err.message);
+            if (err.response?.status === 401) {
+                addAlert('Session expired. Please log in again.', 'error');
+                localStorage.removeItem('token');
+                localStorage.removeItem('userId');
+                window.location.reload();
+            } else {
+                addAlert('Level-up failed.', 'error');
+            }
+        }
     };
 
     if (!player) return <div className="loading">Loading profile...</div>;
@@ -158,7 +150,12 @@ const Home = ({ player, setPlayer, addAlert }) => {
             <div className="xp-bar">
                 <div
                     className="xp-progress"
-                    style={{ width: `${(typeof player.xp === 'number' && typeof player.level === 'number' ? (player.xp / getXpForLevel(player.level + 1)) * 100 : 0)}%` }}
+                    style={{
+                        width: `${typeof player.xp === 'number' && typeof player.level === 'number'
+                            ? (player.xp / getXpForLevel(player.level + 1)) * 100
+                            : 0
+                            }%`
+                    }}
                 ></div>
             </div>
             {canLevelUp && (
@@ -200,9 +197,14 @@ const Home = ({ player, setPlayer, addAlert }) => {
                 {player && player.milestones && player.milestones.length > 0 ? (
                     player.milestones.map(milestone => (
                         <div key={milestone.id} className={`milestone-item ${milestone.completed ? 'completed' : ''}`}>
-                            <span>{milestone.name}: {milestone.progress}/{milestone.target}</span>
+                            <span>
+                                {milestone.name}: {milestone.progress}/{milestone.target}
+                            </span>
                             <span className="reward">
-                                Reward: {milestone.reward.cash ? `$${milestone.reward.cash.toLocaleString()}` : `${milestone.reward.xp} XP`}
+                                Reward:{' '}
+                                {milestone.reward.cash
+                                    ? `$${milestone.reward.cash.toLocaleString()}`
+                                    : `${milestone.reward.xp} XP`}
                             </span>
                             {milestone.completed && <span className="completed-badge">Completed</span>}
                         </div>

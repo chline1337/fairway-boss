@@ -1,5 +1,7 @@
+// src/components/Leaderboard.js
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
+
 
 const Leaderboard = ({ player, addAlert }) => {
     const [leaderboard, setLeaderboard] = useState([]);
@@ -9,9 +11,7 @@ const Leaderboard = ({ player, addAlert }) => {
         const fetchLeaderboard = async () => {
             setIsLoading(true);
             try {
-                const response = await axios.get('/leaderboard', {
-                    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-                });
+                const response = await api.get('/leaderboard');
                 console.log('Leaderboard data:', response.data); // Debug
                 setLeaderboard(response.data);
             } catch (err) {

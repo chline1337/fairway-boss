@@ -1,9 +1,9 @@
-// client/src/components/Tournament.js
+// src/components/Tournament.js
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import TournamentSetup from './TournamentSetup';
-import CurrentTournament from './CurrentTournament';
-import TournamentHistory from './TournamentHistory';
+import api from '../../services/api';
+import TournamentSetup from '../tournament/TournamentSetup';
+import CurrentTournament from '../tournament/CurrentTournament';
+import TournamentHistory from '../tournament/TournamentHistory';
 
 const Tournament = ({ player, setPlayer, setResults, addAlert }) => {
     const [options, setOptions] = useState(null);
@@ -15,74 +15,72 @@ const Tournament = ({ player, setPlayer, setResults, addAlert }) => {
     const [tactic, setTactic] = useState('');
 
     useEffect(() => {
-        axios.get('/tournament/options', {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        })
-            .then(res => {
+        const fetchOptions = async () => {
+            try {
+                const res = await api.get('/tournament/options');
                 setOptions(res.data);
                 setSelectedEvent(res.data.events[0]);
                 setSelectedCourse(res.data.courses[0]);
                 setSelectedWeather(res.data.weatherConditions[0]);
-            })
-            .catch(err => {
+            } catch (err) {
                 console.error('Failed to load tournament options:', err.response?.data || err.message);
                 addAlert('Failed to load tournament options.', 'error');
-            });
+            }
+        };
 
-        axios.get('/tournament/history', {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        })
-            .then(res => {
+        const fetchHistory = async () => {
+            try {
+                const res = await api.get('/tournament/history');
                 console.log('Tournament history data:', res.data);
                 setHistory(res.data);
-            })
-            .catch(err => {
+            } catch (err) {
                 console.error('Failed to load tournament history:', err.response?.data || err.message);
                 addAlert('Failed to load tournament history.', 'error');
-            });
+            }
+        };
+
+        fetchOptions();
+        fetchHistory();
     }, [player.week, addAlert]);
 
-    const startTournament = () => {
+    const startTournament = async () => {
         if (!tactic) {
             addAlert('Please select a tactic.', 'error');
             return;
         }
-        axios.post('/tournament', {
-            tactic,
-            courseName: selectedCourse,
-            weatherName: selectedWeather,
-            eventName: selectedEvent
-        }, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        })
-            .then(res => {
-                console.log('New tournament data:', res.data);
-                setPlayer(res.data.player);
-                setTournamentResults(res.data);
-                setResults(null);
-                setHistory(prev => [res.data, ...prev]);
-                const { place, prize, course } = res.data;
-                if (place === 1) {
-                    addAlert(`You won the ${selectedEvent} at ${course}! +$${prize.toLocaleString()}`, 'success');
-                } else {
-                    addAlert(`Finished ${place}${getOrdinalSuffix(place)} at ${course}, earned $${prize.toLocaleString()}!`, 'neutral');
-                }
-                switch (res.data.weather) {
-                    case 'Windy':
-                        addAlert('Windy conditions favored your Mental but challenged Driving.', 'neutral');
-                        break;
-                    case 'Rainy':
-                        addAlert('Rainy weather boosted your Putting but hindered Irons.', 'neutral');
-                        break;
-                    default:
-                        addAlert('Calm weather provided a neutral playing field.', 'neutral');
-                        break;
-                }
-            })
-            .catch(err => {
-                console.error('Tournament play failed:', err.response?.data || err.message);
-                addAlert('Tournament play failed.', 'error');
+        try {
+            const res = await api.post('/tournament', {
+                tactic,
+                courseName: selectedCourse,
+                weatherName: selectedWeather,
+                eventName: selectedEvent
             });
+            console.log('New tournament data:', res.data);
+            setPlayer(res.data.player);
+            setTournamentResults(res.data);
+            setResults(null);
+            setHistory(prev => [res.data, ...prev]);
+            const { place, prize, course } = res.data;
+            if (place === 1) {
+                addAlert(`You won the ${selectedEvent} at ${course}! +$${prize.toLocaleString()}`, 'success');
+            } else {
+                addAlert(`Finished ${place}${getOrdinalSuffix(place)} at ${course}, earned $${prize.toLocaleString()}!`, 'neutral');
+            }
+            switch (res.data.weather) {
+                case 'Windy':
+                    addAlert('Windy conditions favored your Mental but challenged Driving.', 'neutral');
+                    break;
+                case 'Rainy':
+                    addAlert('Rainy weather boosted your Putting but hindered Irons.', 'neutral');
+                    break;
+                default:
+                    addAlert('Calm weather provided a neutral playing field.', 'neutral');
+                    break;
+            }
+        } catch (err) {
+            console.error('Tournament play failed:', err.response?.data || err.message);
+            addAlert('Tournament play failed.', 'error');
+        }
     };
 
     const resetCurrent = () => {

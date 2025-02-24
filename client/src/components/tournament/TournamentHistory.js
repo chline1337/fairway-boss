@@ -1,3 +1,4 @@
+// src/components/pages/TournamentHistory.js
 import React, { useState } from 'react';
 
 const TournamentHistory = ({ history }) => {
@@ -39,8 +40,8 @@ const TournamentHistory = ({ history }) => {
                             </tr>
                         </thead>
                         <tbody>
-                            {paginatedHistory.map(tournament => (
-                                <tr key={tournament._id}>
+                            {paginatedHistory.map((tournament, index) => (
+                                <tr key={tournament._id ? tournament._id : index}>
                                     <td>{tournament.week}</td>
                                     <td>{tournament.eventName}</td>
                                     <td>{tournament.courseName}</td>
@@ -59,17 +60,13 @@ const TournamentHistory = ({ history }) => {
                     </table>
                     {totalPages > 1 && (
                         <div className="pagination">
-                            <button
-                                onClick={handlePrevious}
-                                disabled={currentPage === 1}
-                            >
+                            <button onClick={handlePrevious} disabled={currentPage === 1}>
                                 Previous
                             </button>
-                            <span>Page {currentPage} of {totalPages}</span>
-                            <button
-                                onClick={handleNext}
-                                disabled={currentPage === totalPages}
-                            >
+                            <span>
+                                Page {currentPage} of {totalPages}
+                            </span>
+                            <button onClick={handleNext} disabled={currentPage === totalPages}>
                                 Next
                             </button>
                         </div>

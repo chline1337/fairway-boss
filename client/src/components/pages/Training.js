@@ -1,8 +1,10 @@
+// src/components/Training.js
 import React from 'react';
-import axios from 'axios';
+import api from '../../services/api';
+
 
 const Training = ({ player, setPlayer, addAlert }) => {
-    const train = (stat) => {
+    const train = async (stat) => {
         if (!['driving', 'irons', 'putting', 'mental'].includes(stat)) {
             addAlert('Invalid stat selected.', 'error');
             return;
@@ -13,29 +15,25 @@ const Training = ({ player, setPlayer, addAlert }) => {
             return;
         }
 
-        const BASE_URL = process.env.REACT_APP_ENV === 'development' ? 'http://localhost:5000' : '/api';
-        axios.post(`${BASE_URL}/train`, { stat }, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        })
-            .then(res => {
-                if (!res.data || !res.data.stats || typeof res.data.stats[stat] !== 'number') {
-                    throw new Error('Invalid response from server');
-                }
-                const increase = res.data.stats[stat] - player.stats[stat];
-                setPlayer(res.data);
-                addAlert(`${stat.charAt(0).toUpperCase() + stat.slice(1)} increased by +${increase}!`, 'success');
-            })
-            .catch(err => {
-                console.error('Training failed:', err.response?.data || err.message);
-                if (err.response?.status === 401) {
-                    addAlert('Session expired. Please log in again.', 'error');
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('userId');
-                    window.location.reload();
-                } else {
-                    addAlert('Training failed.', 'error');
-                }
-            });
+        try {
+            const res = await api.post('/train', { stat });
+            if (!res.data || !res.data.stats || typeof res.data.stats[stat] !== 'number') {
+                throw new Error('Invalid response from server');
+            }
+            const increase = res.data.stats[stat] - player.stats[stat];
+            setPlayer(res.data);
+            addAlert(`${stat.charAt(0).toUpperCase() + stat.slice(1)} increased by +${increase}!`, 'success');
+        } catch (err) {
+            console.error('Training failed:', err.response?.data || err.message);
+            if (err.response?.status === 401) {
+                addAlert('Session expired. Please log in again.', 'error');
+                localStorage.removeItem('token');
+                localStorage.removeItem('userId');
+                window.location.reload();
+            } else {
+                addAlert('Training failed.', 'error');
+            }
+        }
     };
 
     return (
@@ -43,6 +41,7 @@ const Training = ({ player, setPlayer, addAlert }) => {
             <h3>Training</h3>
             {player && player.stats ? (
                 <div>
+                    {/* Display stats and buttons */}
                     <div className="stats-grid">
                         <div className="stat-item">
                             <i className="fas fa-golf-ball"></i>

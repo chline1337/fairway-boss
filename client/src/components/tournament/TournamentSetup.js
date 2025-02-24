@@ -1,3 +1,4 @@
+// src/components/TournamentSetup.js
 import React from 'react';
 
 const TournamentSetup = ({
@@ -34,31 +35,36 @@ const TournamentSetup = ({
             <div className="tournament-setup">
                 <div className="shop-filter">
                     <label>Event:</label>
-                    <select value={selectedEvent} onChange={e => setSelectedEvent(e.target.value)}>
-                        {events.map(event => (
-                            <option key={event} value={event}>{event}</option>
+                    <select value={selectedEvent} onChange={(e) => setSelectedEvent(e.target.value)}>
+                        {events.map((event) => (
+                            <option key={event} value={event}>
+                                {event}
+                            </option>
                         ))}
                     </select>
                 </div>
                 <div className="shop-filter">
                     <label>Course:</label>
-                    <select value={selectedCourse} onChange={e => setSelectedCourse(e.target.value)}>
-                        {courses.map(course => (
-                            <option key={course} value={course}>{course}</option>
+                    <select value={selectedCourse} onChange={(e) => setSelectedCourse(e.target.value)}>
+                        {courses.map((course) => (
+                            <option key={course} value={course}>
+                                {course}
+                            </option>
                         ))}
                     </select>
                 </div>
                 <div className="shop-filter">
                     <label>Weather:</label>
-                    <select value={selectedWeather} onChange={e => setSelectedWeather(e.target.value)}>
-                        {weatherConditions.map(weather => (
-                            <option key={weather} value={weather}>{weather}</option>
+                    <select value={selectedWeather} onChange={(e) => setSelectedWeather(e.target.value)}>
+                        {weatherConditions.map((weather) => (
+                            <option key={weather} value={weather}>
+                                {weather}
+                            </option>
                         ))}
                     </select>
                 </div>
             </div>
             <p className="weather-effects">Effects: {getWeatherEffects(selectedWeather)}</p>
-
             <h4>Select Tactic:</h4>
             <div className="button-group">
                 <button onClick={() => setTactic('aggressive')}>Aggressive (-2)</button>

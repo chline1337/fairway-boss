@@ -1,7 +1,9 @@
+// src/components/Settings.js
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 
-const Settings = ({ player, setPlayer, addAlert, handleLogout }) => { // Replace setToken with handleLogout
+
+const Settings = ({ player, setPlayer, addAlert, handleLogout }) => {
     const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') === 'true');
     const [difficulty, setDifficulty] = useState(localStorage.getItem('difficulty') || 50);
     const [muteSound, setMuteSound] = useState(localStorage.getItem('muteSound') === 'true');
@@ -14,35 +16,29 @@ const Settings = ({ player, setPlayer, addAlert, handleLogout }) => { // Replace
         localStorage.setItem('muteSound', muteSound);
     }, [darkMode, difficulty, muteSound]);
 
-    const handleNameChange = () => {
-        axios.post('/update-name', { name: newName }, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        })
-            .then(res => {
-                setPlayer(res.data);
-                setNewName(res.data.name); // Sync input with updated name
-                addAlert(`Username changed to ${res.data.name}!`, 'success');
-            })
-            .catch(err => {
-                console.error('Name change failed:', err.response?.data || err.message);
-                addAlert('Failed to change username.', 'error');
-            });
+    const handleNameChange = async () => {
+        try {
+            const res = await api.post('/update-name', { name: newName });
+            setPlayer(res.data);
+            setNewName(res.data.name); // Sync input with updated name
+            addAlert(`Username changed to ${res.data.name}!`, 'success');
+        } catch (err) {
+            console.error('Name change failed:', err.response?.data || err.message);
+            addAlert('Failed to change username.', 'error');
+        }
     };
 
-    const handleReset = () => {
+    const handleReset = async () => {
         if (window.confirm('Are you sure you want to reset all progress?')) {
-            axios.post('/reset', {}, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            })
-                .then(res => {
-                    setPlayer(res.data);
-                    setNewName(res.data.name);
-                    addAlert('Game reset successfully!', 'success');
-                })
-                .catch(err => {
-                    console.error('Reset failed:', err.response?.data || err.message);
-                    addAlert('Reset failed.', 'error');
-                });
+            try {
+                const res = await api.post('/reset');
+                setPlayer(res.data);
+                setNewName(res.data.name);
+                addAlert('Game reset successfully!', 'success');
+            } catch (err) {
+                console.error('Reset failed:', err.response?.data || err.message);
+                addAlert('Reset failed.', 'error');
+            }
         }
     };
 
@@ -72,7 +68,7 @@ const Settings = ({ player, setPlayer, addAlert, handleLogout }) => { // Replace
                         <input
                             type="checkbox"
                             checked={darkMode}
-                            onChange={() => setDarkMode(prev => !prev)}
+                            onChange={() => setDarkMode((prev) => !prev)}
                         />
                         <span className="slider"></span>
                     </label>
@@ -94,7 +90,7 @@ const Settings = ({ player, setPlayer, addAlert, handleLogout }) => { // Replace
                         <input
                             type="checkbox"
                             checked={muteSound}
-                            onChange={() => setMuteSound(prev => !prev)}
+                            onChange={() => setMuteSound((prev) => !prev)}
                         />
                         <span className="slider"></span>
                     </label>
