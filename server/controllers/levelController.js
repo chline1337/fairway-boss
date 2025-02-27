@@ -1,6 +1,5 @@
 // server/controllers/levelController.js
-const { loadPlayer, savePlayer, getXpForLevel } = require('../utils/utils');
-const { checkMilestones } = require('../services/milestoneService');
+const { loadPlayer, savePlayer, getXpForLevel, checkMilestones } = require('../utils/utils');
 
 exports.levelUp = async (req, res) => {
     try {

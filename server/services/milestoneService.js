@@ -1,77 +1,24 @@
 // server/services/milestoneService.js
-module.exports.checkMilestones = async (db, player) => {
-    try {
-        console.log('Checking milestones for player:', player.name);
-        const playerMilestones = await db
-            .collection('playerMilestones')
-            .find({ userId: player.userId })
-            .toArray();
-        console.log('Player milestones fetched:', playerMilestones.length);
-        if (playerMilestones.length === 0) {
-            console.warn('No player milestones found for userId:', player.userId);
-            return; // Early return if no milestones
-        }
-        const milestones = await db
-            .collection('milestones')
-            .find({
-                _id: { $in: playerMilestones.map((pm) => pm.milestoneId) }
-            })
-            .toArray();
-
-        for (const pm of playerMilestones) {
-            if (!pm.completed) {
-                const milestone = milestones.find((m) => m._id === pm.milestoneId);
-                if (!milestone) {
-                    console.warn('Milestone not found for milestoneId:', pm.milestoneId);
-                    continue;
-                }
-
-                let progress = pm.progress;
-                switch (milestone._id) {
-                    case 'wins_5':
-                    case 'wins_10':
-                        progress = player.wins;
-                        break;
-                    case 'level_10':
-                    case 'level_20':
-                        progress = player.level;
-                        break;
-                    case 'earnings_100k':
-                        progress = player.earnings;
-                        break;
-                    case 'train_50':
-                        progress = pm.progress;
-                        break;
-                    case 'items_10':
-                        progress = player.itemsBought || 0;
-                        break;
-                    case 'tournaments_20':
-                        progress = player.tournamentsPlayed || 0;
-                        break;
-                    case 'sell_5':
-                        progress = player.itemsSold || 0;
-                        break;
-                    case 'cash_50k':
-                        progress = player.cashSpent || 0;
-                        break;
-                }
-                if (progress >= milestone.target) {
-                    pm.completed = true;
-                    if (milestone.reward.cash) player.cash += milestone.reward.cash;
-                    if (milestone.reward.xp) player.xp += milestone.reward.xp;
-                    console.log(`Milestone completed: ${milestone.name}`);
-                }
-                if (progress !== pm.progress) {
-                    await db.collection('playerMilestones').updateOne(
-                        { _id: pm._id },
-                        { $set: { progress, completed: pm.completed } }
-                    );
-                    console.log(`Updated milestone ${milestone._id} progress to ${progress}`);
-                }
-            }
-        }
-    } catch (err) {
-        console.error('Error checking milestones:', err.message);
-        throw err;
+const seedMilestones = async (db) => {
+    const milestoneCount = await db.collection('milestones').countDocuments();
+    if (milestoneCount === 0) {
+        const defaultMilestones = [
+            { _id: 'wins_5', name: 'Win 5 Tournaments', target: 5, reward: { cash: 10000 } },
+            { _id: 'level_10', name: 'Reach Level 10', target: 10, reward: { xp: 500 } },
+            { _id: 'earnings_100k', name: 'Earn $100,000', target: 100000, reward: { cash: 20000 } },
+            { _id: 'train_50', name: 'Train 50 Times', target: 50, reward: { xp: 300 } },
+            { _id: 'items_10', name: 'Buy 10 Items', target: 10, reward: { cash: 15000 } },
+            { _id: 'tournaments_20', name: 'Play 20 Tournaments', target: 20, reward: { xp: 1000 } },
+            { _id: 'sell_5', name: 'Sell 5 Items', target: 5, reward: { cash: 5000 } },
+            { _id: 'cash_50k', name: 'Spend $50,000', target: 50000, reward: { xp: 200 } },
+            { _id: 'wins_10', name: 'Win 10 Tournaments', target: 10, reward: { cash: 25000 } },
+            { _id: 'level_20', name: 'Reach Level 20', target: 20, reward: { xp: 1000 } }
+        ];
+        await db.collection('milestones').insertMany(defaultMilestones);
+        console.log('Initialized milestones collection');
+    } else {
+        console.log('Milestones collection already seeded');
     }
 };
+
+module.exports = { seedMilestones };

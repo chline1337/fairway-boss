@@ -1,5 +1,6 @@
 // server/controllers/playerController.js
-const { loadPlayer, savePlayer, defaultPlayer } = require('../utils/utils'); // <-- Adjust path if needed
+const { loadPlayer, savePlayer, defaultPlayer, checkMilestones } = require('../utils/utils');
+
 
 exports.getPlayer = async (req, res) => {
     try {
