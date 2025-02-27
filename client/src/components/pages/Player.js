@@ -126,39 +126,58 @@ const Player = ({ player, setPlayer, addAlert }) => {
 
     return (
         <div className="player-profile">
-            <h2>{player.name || 'Rookie'}</h2>
-            <PlayerStats stats={player.stats} />
-            <p>
-                Cash: {typeof player.cash === 'number' ? `$${player.cash.toLocaleString()}` : '$0'} |
-                Earnings: {typeof player.earnings === 'number' ? `$${player.earnings.toLocaleString()}` : '$0'} |
-                Week: {player.week || 1} |
-                Level: {player.level || 1} |
-                XP: {typeof player.xp === 'number' ? `${player.xp}/${getXpForLevel(player.level)}` : '0/100'}
-            </p>
-            <XPBar xp={player.xp} level={player.level} getXpForLevel={getXpForLevel} />
-            {canLevelUp && (
-                <div className="level-up">
-                    <h4>Level Up! Choose a Stat (+2):</h4>
-                    <div className="button-group">
-                        <button onClick={() => handleLevelUp('driving')} disabled={!player || !player.stats}>
-                            Driving
-                        </button>
-                        <button onClick={() => handleLevelUp('irons')} disabled={!player || !player.stats}>
-                            Irons
-                        </button>
-                        <button onClick={() => handleLevelUp('putting')} disabled={!player || !player.stats}>
-                            Putting
-                        </button>
-                        <button onClick={() => handleLevelUp('mental')} disabled={!player || !player.stats}>
-                            Mental
-                        </button>
+            <div className="profile-header">
+                <img
+                    src="/images/profile-placeholder.jpg"
+                    alt="Profile"
+                    className="profile-picture"
+                />
+                <div className="profile-info">
+                    <h2>{player.name || 'Rookie'}</h2>
+                    <p>Level: {player.level || 1}</p>
+                    <div className="profile-social">
+                        <a href="#x" title="x"><i className="fab fa-x"></i></a>        
+                        <a href="#instagram" title="Instagram"><i className="fab fa-instagram"></i></a>
+                        <a href="#linkedin" title="LinkedIn"><i className="fab fa-linkedin"></i></a>
+                        <a href="#instagram" title="Instagram"><i className="fab fa-youtube"></i></a>
                     </div>
                 </div>
-            )}
-            <h3>Equipment</h3>
-            <EquipmentList equipment={player.equipment} sellItem={sell} />
-            <h3>Career Milestones</h3>
-            <MilestonesList milestones={player.milestones} />
+            </div>
+            <div className="profile-body">
+                <PlayerStats stats={player.stats} />
+                <div className="profile-summary">
+                    <p>
+                        Cash: {typeof player.cash === 'number' ? `$${player.cash.toLocaleString()}` : '$0'} |
+                        Earnings: {typeof player.earnings === 'number' ? `$${player.earnings.toLocaleString()}` : '$0'} |
+                        Week: {player.week || 1} |
+                        XP: {typeof player.xp === 'number' ? `${player.xp}/${getXpForLevel(player.level)}` : '0/100'}
+                    </p>
+                    <XPBar xp={player.xp} level={player.level} getXpForLevel={getXpForLevel} />
+                </div>
+                {canLevelUp && (
+                    <div className="level-up">
+                        <h4>Level Up! Choose a Stat (+2):</h4>
+                        <div className="button-group">
+                            <button onClick={() => handleLevelUp('driving')} disabled={!player || !player.stats}>
+                                <i className="fas fa-golf-ball"></i> Driving
+                            </button>
+                            <button onClick={() => handleLevelUp('irons')} disabled={!player || !player.stats}>
+                                <i className="fas fa-flag"></i> Irons
+                            </button>
+                            <button onClick={() => handleLevelUp('putting')} disabled={!player || !player.stats}>
+                                <i className="fas fa-golf-ball"></i> Putting
+                            </button>
+                            <button onClick={() => handleLevelUp('mental')} disabled={!player || !player.stats}>
+                                <i className="fas fa-brain"></i> Mental
+                            </button>
+                        </div>
+                    </div>
+                )}
+                <h3>Equipment</h3>
+                <EquipmentList equipment={player.equipment} sellItem={sell} />
+                <h3>Career Milestones</h3>
+                <MilestonesList milestones={player.milestones} />
+            </div>
         </div>
     );
 };
