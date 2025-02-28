@@ -30,3 +30,4 @@ Desktop.ini
 client/.env
 server/.env
 .env
+/client/build

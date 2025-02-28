@@ -1,6 +1,6 @@
 // src/components/pages/Login.js
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 
 const Login = ({ setToken, addAlert }) => {
     const [username, setUsername] = useState('');
@@ -17,9 +17,7 @@ const Login = ({ setToken, addAlert }) => {
         const endpoint = isRegistering ? '/register' : '/login';
         const payload = isRegistering ? { username, password, email } : { username, password };
         try {
-            const res = await axios.post(`http://localhost:5000${endpoint}`, payload, {
-                headers: { 'Content-Type': 'application/json' }
-            });
+            const res = await api.post(endpoint, payload);
             if (!res.data || typeof res.data !== 'object' || !res.data.token) {
                 throw new Error('Invalid response from server: ' + JSON.stringify(res.data));
             }

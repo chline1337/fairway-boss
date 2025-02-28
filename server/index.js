@@ -51,7 +51,10 @@ app.use((req, res, next) => {
         app.get('/api', (req, res) => res.json({ status: 'API is live' }));
 
         const PORT = process.env.PORT || 5000;
-        app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+        // Bind the server to all network interfaces (0.0.0.0)
+        app.listen(PORT, '0.0.0.0', () =>
+            console.log(`Server running on http://0.0.0.0:${PORT}`)
+        );
     } catch (err) {
         console.error('MongoDB connection error:', err);
         process.exit(1);
